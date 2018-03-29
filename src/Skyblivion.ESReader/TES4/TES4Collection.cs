@@ -1,5 +1,7 @@
 using Skyblivion.ESReader.Exceptions;
+using Skyblivion.ESReader.Extensions.IDictionaryExtensions;
 using Skyblivion.ESReader.Struct;
+using System;
 using System.Collections.Generic;
 
 namespace Skyblivion.ESReader.TES4
@@ -25,7 +27,7 @@ namespace Skyblivion.ESReader.TES4
         {
             TES4File file = new TES4File(this, this.path, name);
             this.files.Add(file);
-            this.indexedFiles[name] = file;
+            this.indexedFiles.Add(name, file);
         }
 
         public void load(TES4FileLoadScheme scheme)
@@ -38,35 +40,34 @@ namespace Skyblivion.ESReader.TES4
                     //no FORMID class encapsulation due to memory budgeting ;)
                     int formid = loadedRecord.getFormId();
                     //TODO resolve conflicts
-                    this.records[formid] = loadedRecord;
-                    string edid = loadedRecord.getSubrecord("EDID");
+                    this.records.Add(formid, loadedRecord);
+                    string edid = loadedRecord.getSubrecordTrimLower("EDID");
                     if (edid != null)
                     {
-                        this.edidIndex.add(edid.Trim().ToLower(), loadedRecord);
+                        this.edidIndex.add(edid, loadedRecord);
                     }
                 }
             }
         }
 
-        public ITES4Record findByFormid(int formid)
+        public TES4LoadedRecord findByFormid(int formid)
         {
-            if (!this.records.ContainsKey(formid))
+            TES4LoadedRecord record;
+            if (this.records.TryGetValue(formid, out record))
             {
-                throw new RecordNotFoundException("Form "+formid.ToString()+" not found.");
+                return record;
             }
-
-            return this.records[formid];
+            throw new RecordNotFoundException("Form " + formid.ToString() + " not found.");
         }
 
         public ITES4Record findByEDID(string edid)
         {
             string lowerEdid = edid.ToLower();
             var val = this.edidIndex.search(lowerEdid);
-            if (null == val)
+            if (val == null)
             {
                 throw new RecordNotFoundException("EDID "+edid+" not found.");
             }
-
             return (ITES4Record)val;
         }
 
@@ -92,18 +93,30 @@ namespace Skyblivion.ESReader.TES4
 
         public int expand(int formid, string file)
         {
-            if (!this.expandTables.ContainsKey(file))
+            Dictionary<int, int> expandTable;
+            if (!this.expandTables.TryGetValue(file, out expandTable))
             {
                 throw new InconsistentESFilesException("Cannot find file "+file+" in expand table.");
             }
 
             int index = formid >> 24;
-            if (!this.expandTables[file].ContainsKey(index))
+            int newValue;
+            try
+            {
+                newValue = expandTable[index] << 24;
+            }
+            catch (KeyNotFoundException)
             {
                 throw new InconsistentESFilesException("Cannot expand formid index "+index+" in file "+file);
             }
 
-            return (this.expandTables[file][index] << 24) | (formid & 0x00FFFFFF);
+            return newValue | (formid & 0x00FFFFFF);
+        }
+
+        private void AddToExpandTables(string fileName, int dictionaryKey, int dictionaryValue)
+        {
+            Dictionary<int, int> expandTable = expandTables.GetOrAdd(fileName, () => new Dictionary<int, int>());
+            expandTable.Add(dictionaryKey, dictionaryValue);
         }
 
         private void buildExpandTables()
@@ -120,23 +133,26 @@ namespace Skyblivion.ESReader.TES4
                 var file = files[i];
                 List<string> masters = file.getMasters();
                 //Index the file so it can see itself
-                //this.expandTables[file.getName()] = [count(masters) => index];
+                //this.expandTables.Add(file.getName(), new Dictionary<int, int>() { { masters.Count, index } });
                 for (int x = 0; x <= 0xFF; ++x)
                 {
-                    this.expandTables[file.getName()][x] = i;
+                    AddToExpandTables(file.getName(), x, i);
                 }
 
                 for(int j=0;j<masters.Count;j++)
                 {
                     var masterId = j;
                     var masterName = masters[j];
-                    if (!fileToIndex.ContainsKey(masterName))
+                    int expandedIndex;
+                    try
+                    {
+                        expandedIndex = fileToIndex[masterName];
+                    }
+                    catch (KeyNotFoundException)
                     {
                         throw new InconsistentESFilesException("File "+file.getName()+" references a master not present in collection.");
                     }
-
-                    int expandedIndex = fileToIndex[masterName];
-                    this.expandTables[file.getName()][masterId] = expandedIndex;
+                    AddToExpandTables(file.getName(), masterId, expandedIndex);
                 }
             }
         }

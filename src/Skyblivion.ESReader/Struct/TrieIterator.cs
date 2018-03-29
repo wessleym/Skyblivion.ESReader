@@ -39,7 +39,6 @@ namespace Skyblivion.ESReader.Struct
         {
             /*
              * Expand the current node to children
-             * @var Trie subnode
              */
             foreach (var subnode in this.current.subnodes())
             {
@@ -76,15 +75,11 @@ namespace Skyblivion.ESReader.Struct
             /*
              * There can be intermediary nodes that weren"t directly inserted
              * They won"t have a value, so let"s skip them
-             * @var \ArrayIterator[] nodesToTravel
              */
             Stack<Trie[]> nodesToTravel = new Stack<Trie[]>();
             nodesToTravel.Push(new Trie[] { trie });
             while (nodesToTravel.Any())
             {
-                /*
-                 * @var Trie[] currentNodes
-                 */
                 Trie[] currentNodes = nodesToTravel.Pop();
                 foreach (var currentNode in currentNodes)
                 {

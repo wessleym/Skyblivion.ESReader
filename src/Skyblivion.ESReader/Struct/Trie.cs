@@ -1,3 +1,5 @@
+using Skyblivion.ESReader.PHP;
+using System;
 using System.Collections.Generic;
 
 namespace Skyblivion.ESReader.Struct
@@ -39,7 +41,7 @@ namespace Skyblivion.ESReader.Struct
                 var prefix = kvp.Key;
                 var trie = kvp.Value;
                 int prefixLength = prefix.Length;
-                string head = str.Substring(0, prefixLength);
+                string head = PHPFunction.Substr(str, prefixLength);
                 int headLength = head.Length;
                 bool equals = true;
                 string equalPrefix = "";
@@ -48,8 +50,8 @@ namespace Skyblivion.ESReader.Struct
                     if (i >= headLength)
                     {
                         Trie equalTrie = new Trie(value);
-                        this.trie[equalPrefix] = equalTrie;
-                        equalTrie.trie[prefix.Substring(i)] = trie;
+                        this.trie.Add(equalPrefix, equalTrie);
+                        equalTrie.trie.Add(prefix.Substring(i), trie);
                         this.trie.Remove(prefix);
                         return;
                     }
@@ -58,9 +60,9 @@ namespace Skyblivion.ESReader.Struct
                         if (i > 0)
                         {
                             Trie equalTrie = new Trie();
-                            this.trie[equalPrefix] = equalTrie;
-                            equalTrie.trie[prefix.Substring(i)] = trie;
-                            equalTrie.trie[str.Substring(i)] = new Trie(value);
+                            this.trie.Add(equalPrefix, equalTrie);
+                            equalTrie.trie.Add(prefix.Substring(i), trie);
+                            equalTrie.trie.Add(str.Substring(i), new Trie(value));
                             this.trie.Remove(prefix);
                             return;
                         }
@@ -78,7 +80,7 @@ namespace Skyblivion.ESReader.Struct
                     return;
                 }
             }
-            this.trie[str] = new Trie(value);
+            this.trie.Add(str, new Trie(value));
         }
 
         /*
@@ -86,19 +88,17 @@ namespace Skyblivion.ESReader.Struct
         */
         public object search(string str)
         {
-            if (str == "")
+            if (str == "")//WTM:  Change:  In PHP, this was empty(str), which returns true when str = "0"
             {
                 return this.value;
             }
             foreach (var kvp in this.trie)
             {
                 var prefix = kvp.Key;
-                var trie = kvp.Value;
-                int prefixLength = prefix.Length;
-                string head = str.Substring(0, prefixLength);
-                if (head == prefix)
+                if (str.StartsWith(prefix))
                 {
-                    return trie.search(str.Substring(prefixLength));
+                    var trie = kvp.Value;
+                    return trie.search(str.Substring(prefix.Length));
                 }
             }
             return null;

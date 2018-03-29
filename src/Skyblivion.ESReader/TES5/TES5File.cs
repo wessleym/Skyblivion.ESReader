@@ -1,6 +1,8 @@
+using System.IO;
+
 namespace Skyblivion.ESReader
 {
-    class TES5File
+    class TES5File//WTM:  Note:  Unused
     {
         private string path;
         private string name;
@@ -17,7 +19,7 @@ namespace Skyblivion.ESReader
 
         public void load()
         {
-            string filepath = this.path+"/"+this.name;
+            string filepath = this.path+ Path.DirectorySeparatorChar + this.name;
             //h = fopen(filepath, "rb");//WTM:  Change:  Commented since unused
         }
     }

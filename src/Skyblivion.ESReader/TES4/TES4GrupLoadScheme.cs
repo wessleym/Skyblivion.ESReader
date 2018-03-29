@@ -1,3 +1,4 @@
+using Skyblivion.ESReader.Extensions.IDictionaryExtensions;
 using System.Collections.Generic;
 
 namespace Skyblivion.ESReader.TES4
@@ -7,7 +8,7 @@ namespace Skyblivion.ESReader.TES4
         private Dictionary<TES4RecordType, TES4RecordLoadScheme> records = new Dictionary<TES4RecordType, TES4RecordLoadScheme>();
         public void add(TES4RecordType type, TES4RecordLoadScheme scheme)
         {
-            this.records[type] = scheme;
+            this.records.Add(type, scheme);
         }
 
         public bool shouldLoad(TES4RecordType type)
@@ -17,8 +18,7 @@ namespace Skyblivion.ESReader.TES4
 
         public TES4RecordLoadScheme getRulesFor(TES4RecordType type)
         {
-            if (!this.records.ContainsKey(type)) { return null; }
-            return this.records[type];
+            return this.records.GetWithFallback(type, () => null);
         }
     }
 }

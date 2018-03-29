@@ -1,8 +1,13 @@
 using Skyblivion.ESReader.Exceptions;
-using Skyblivion.ESReader.QueueExtensions;
+using Skyblivion.ESReader.Extensions.IDictionaryExtensions;
+using Skyblivion.ESReader.Extensions.StreamExtensions;
+using Skyblivion.ESReader.Extensions.TextReaderExtensions;
+using Skyblivion.ESReader.PHP;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 
 namespace Skyblivion.ESReader.TES4
 {
@@ -40,66 +45,82 @@ namespace Skyblivion.ESReader.TES4
             return this.masters;
         }
 
+        public static readonly Lazy<Encoding> ISO_8859_1 = new Lazy<Encoding>(() => Encoding.GetEncoding("iso-8859-1"));
+        private FileStream GetFile()
+        {
+            string filePath = this.path + Path.DirectorySeparatorChar + this.name;
+            return new FileStream(filePath, FileMode.Open);
+        }
+
         public IEnumerable<ITES4Record> load(TES4FileLoadScheme scheme)
         {
-            string filepath = this.path+"/"+this.name;
-            Queue<char> contents = new Queue<char>(File.ReadAllText(filepath));
-            this.fetchTES4(contents);
-            while (contents.Any())
+            Console.Write("Processing " + nameof(TES4File) + " Data...");
+            using (FileStream contents = GetFile())
             {
-                TES4Grup grup = new TES4Grup();
-                string header = new string(contents.Take(TES4Grup.GRUP_HEADER_SIZE).ToArray());
-                if (header.Substring(0, 4) != "GRUP")
+                this.fetchTES4(contents);
+                while (true)
                 {
-                    throw new InvalidESFileException("Invalid GRUP magic, found "+header.Substring(0, 4));
-                }
-
-                TES4RecordType grupType = TES4RecordType.First(header.Substring(8, 4));
-                int grupSize = int.Parse(header.Substring(4, 4));
-                if (scheme.shouldLoad(grupType))
-                {
-                    foreach (var loadedRecord in grup.load(contents, this, scheme.getRulesFor(grupType), true))
+                    byte[] headerBytes = new byte[TES4Grup.GRUP_HEADER_SIZE];
+                    int read = contents.Read(headerBytes);
+                    if (read == 0) { break; }
+                    string header = ISO_8859_1.Value.GetString(headerBytes);
+                    if (header.Substring(0, 4) != "GRUP")
                     {
-                        yield return loadedRecord;
+                        throw new InvalidESFileException("Invalid GRUP magic, found " + header.Substring(0, 4));
                     }
-                }
-                else
-                {
-                    contents.Dequeue(grupSize);
-                }
+                    contents.Seek(-TES4Grup.GRUP_HEADER_SIZE, SeekOrigin.Current);
 
-                this.grups[grup.getType()] = grup;
+                    int grupSize = PHPFunction.UnpackV(header.Substring(4, 4));
+                    TES4RecordType grupType = TES4RecordType.First(header.Substring(8, 4));
+                    TES4Grup grup = new TES4Grup();
+                    if (scheme.shouldLoad(grupType))
+                    {
+                        foreach (var loadedRecord in grup.load(contents, this, scheme.getRulesFor(grupType), true))
+                        {
+                            yield return loadedRecord;
+                        }
+                    }
+                    else
+                    {
+                        contents.Seek(grupSize, SeekOrigin.Current);
+                    }
+
+                    this.grups.Add(grup.getType(), grup);
+                }
             }
+            Console.WriteLine("\rProcessing " + nameof(TES4File) + " Complete");
         }
 
         public TES4Grup getGrup(TES4RecordType type)
         {
-            if (!this.grups.ContainsKey(type)) { return null; }
-            return this.grups[type];
+            return this.grups.GetWithFallback(type, () => null);
         }
 
-    public int expand(int formid)
-    {
-        return this.collection.expand(formid, this.getName());
-    }
+        public int expand(int formid)
+        {
+            return this.collection.expand(formid, this.getName());
+        }
 
-    private TES4LoadedRecord fetchTES4(Queue<char> contents)
-    {
-        string recordHeader = new string(contents.Dequeue(TES4LoadedRecord.RECORD_HEADER_SIZE).ToArray());
-        int recordSize = int.Parse(recordHeader.Substring(4, 4));
-        int recordFormid = int.Parse(recordHeader.Substring(0xC, 4));
-        int recordFlags = int.Parse(recordHeader.Substring(8, 4));
-        TES4LoadedRecord tes4record = new TES4LoadedRecord(this, TES4RecordType.TES4, recordFormid, recordSize, recordFlags);
-        tes4record.load(contents, new TES4RecordLoadScheme(new string[] { "MAST" }));
-        return tes4record;
-    }
+        private TES4LoadedRecord fetchTES4(FileStream stream)
+        {
+            byte[] recordHeader = stream.Read(TES4LoadedRecord.RECORD_HEADER_SIZE);
+            int recordSize = PHPFunction.UnpackV(recordHeader.Skip(4).Take(4).ToArray());//Throw away the first four bytes.
+            int recordFlags = PHPFunction.UnpackV(recordHeader.Skip(8).Take(4).ToArray());
+            int recordFormid = PHPFunction.UnpackV(recordHeader.Skip(12).Take(4).ToArray());
+            TES4LoadedRecord tes4record = new TES4LoadedRecord(this, TES4RecordType.TES4, recordFormid, recordSize, recordFlags);
+            tes4record.load(stream, new TES4RecordLoadScheme(new string[] { "MAST" }));
+            return tes4record;
+        }
 
-    private void initialize()
-    {
-        string filepath = this.path+"/"+this.name;
-        Queue<char> contents = new Queue<char>(File.ReadAllText(filepath));
-        TES4LoadedRecord tes4record = this.fetchTES4(contents);
-        masters = tes4record.getSubrecords("MAST");
-        this.initialized = true;
+        private void initialize()
+        {
+            TES4LoadedRecord tes4record;
+            using (FileStream file = GetFile())
+            {
+                tes4record = this.fetchTES4(file);
+            }
+            masters = tes4record.getSubrecords("MAST");
+            this.initialized = true;
+        }
     }
-} }
+}

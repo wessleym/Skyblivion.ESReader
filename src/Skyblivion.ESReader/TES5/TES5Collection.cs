@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Skyblivion.ESReader
 {
-    class TES5Collection
+    class TES5Collection//WTM:  Note:  This file is unused.
     {
         private TES4Collection tes4Collection;//WTM:  Change:  Added to rectify problem in add method.
         private string path;

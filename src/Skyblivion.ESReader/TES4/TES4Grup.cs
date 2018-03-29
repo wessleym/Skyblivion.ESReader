@@ -1,7 +1,9 @@
 using Skyblivion.ESReader.Exceptions;
-using Skyblivion.ESReader.QueueExtensions;
+using Skyblivion.ESReader.Extensions.StreamExtensions;
+using Skyblivion.ESReader.PHP;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace Skyblivion.ESReader.TES4
@@ -40,24 +42,31 @@ namespace Skyblivion.ESReader.TES4
         /*
              * @throws InvalidESFileException
         */
-        public IEnumerable<ITES4Record> load(Queue<char> fileContents, TES4File file, TES4GrupLoadScheme scheme, bool isTopLevelGrup)
+        public IEnumerable<ITES4Record> load(FileStream fileContents, TES4File file, TES4GrupLoadScheme scheme, bool isTopLevelGrup)
         {
-            string header = new string(fileContents.Dequeue(GRUP_HEADER_SIZE).ToArray());
+            long startPosition = fileContents.Position;
+            byte[] headerBytes = fileContents.Read(GRUP_HEADER_SIZE);
+            string header = TES4File.ISO_8859_1.Value.GetString(headerBytes);
             if (header.Substring(0, 4) != "GRUP")
             {
                 throw new InvalidESFileException("Invalid GRUP magic, found "+header.Substring(0, 4));
             }
 
-            this.size = int.Parse(header.Substring(4, 4));
+            this.size = PHPFunction.UnpackV(header.Substring(4, 4));
             if (isTopLevelGrup)
             {
                 this.type = TES4RecordType.First(header.Substring(8, 4));
             }
 
-            while (fileContents.Any())
+            long end = startPosition + this.size;
+            while (fileContents.Position < end)
             {
                 //Ineffective lookahead, but oh well
-                string nextEntryType = new string(fileContents.Take(4).ToArray());
+                byte[] nextEntryTypeBytes = new byte[4];
+                int bytesRead = fileContents.Read(nextEntryTypeBytes);
+                if (bytesRead == 0) { break; }
+                fileContents.Seek(-4, SeekOrigin.Current);
+                string nextEntryType = TES4File.ISO_8859_1.Value.GetString(nextEntryTypeBytes);
                 switch (nextEntryType)
                 {
                     case "GRUP":
@@ -67,17 +76,16 @@ namespace Skyblivion.ESReader.TES4
                         {
                             yield return subrecord;
                         }
-
                         break;
                     }
 
                     default:
                     {
-                        string recordHeader = new string(fileContents.Dequeue(TES4LoadedRecord.RECORD_HEADER_SIZE).ToArray());
+                        string recordHeader = TES4File.ISO_8859_1.Value.GetString(fileContents.Read(TES4LoadedRecord.RECORD_HEADER_SIZE));
                         TES4RecordType recordType = TES4RecordType.First(recordHeader.Substring(0, 4));
-                        int recordSize = int.Parse(recordHeader.Substring(4, 4));
-                        int recordFormid = int.Parse(recordHeader.Substring(0xC, 4));
-                        int recordFlags = int.Parse(recordHeader.Substring(8, 4));
+                        int recordSize = PHPFunction.UnpackV(recordHeader.Substring(4, 4));
+                        int recordFormid = PHPFunction.UnpackV(recordHeader.Substring(0xC, 4));
+                        int recordFlags = PHPFunction.UnpackV(recordHeader.Substring(8, 4));
                         if (scheme.shouldLoad(recordType))
                         {
                             TES4LoadedRecord record = new TES4LoadedRecord(file, recordType, recordFormid, recordSize, recordFlags);
@@ -87,9 +95,8 @@ namespace Skyblivion.ESReader.TES4
                         }
                         else
                         {
-                            fileContents.Dequeue(recordSize);
+                            fileContents.Seek(recordSize, SeekOrigin.Current);
                         }
-
                         break;
                     }
                 }
