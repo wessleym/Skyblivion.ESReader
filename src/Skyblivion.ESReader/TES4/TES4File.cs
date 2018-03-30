@@ -48,7 +48,7 @@ namespace Skyblivion.ESReader.TES4
         public static readonly Lazy<Encoding> ISO_8859_1 = new Lazy<Encoding>(() => Encoding.GetEncoding("iso-8859-1"));
         private FileStream GetFile()
         {
-            string filePath = this.path + Path.DirectorySeparatorChar + this.name;
+            string filePath = Path.Combine(this.path, this.name);
             return new FileStream(filePath, FileMode.Open);
         }
 

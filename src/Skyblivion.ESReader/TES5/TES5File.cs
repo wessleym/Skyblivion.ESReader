@@ -19,7 +19,7 @@ namespace Skyblivion.ESReader
 
         public void load()
         {
-            string filepath = this.path+ Path.DirectorySeparatorChar + this.name;
+            string filepath = Path.Combine(this.path, this.name);
             //h = fopen(filepath, "rb");//WTM:  Change:  Commented since unused
         }
     }
