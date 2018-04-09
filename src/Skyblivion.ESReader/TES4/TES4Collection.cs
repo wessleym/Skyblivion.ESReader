@@ -60,16 +60,16 @@ namespace Skyblivion.ESReader.TES4
             throw new RecordNotFoundException("Form " + formid.ToString() + " not found.");
         }
 
-        public ITES4Record findByEDID(string edid, bool throwNotFoundException)
+        public TES4LoadedRecord findByEDID(string edid, bool throwNotFoundException)
         {
             string lowerEdid = edid.ToLower();
-            var val = this.edidIndex.search(lowerEdid);
+            TES4LoadedRecord val = this.edidIndex.search(lowerEdid);
             if (val == null)
             {
                 if (throwNotFoundException) { throw new RecordNotFoundException("EDID " + edid + " not found."); }
                 return null;
             }
-            return (ITES4Record)val;
+            return val;
         }
 
         public TrieIterator findByEDIDPrefix(string edid)

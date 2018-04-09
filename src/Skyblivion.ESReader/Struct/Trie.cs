@@ -1,4 +1,5 @@
 using Skyblivion.ESReader.PHP;
+using Skyblivion.ESReader.TES4;
 using System;
 using System.Collections.Generic;
 
@@ -11,13 +12,13 @@ namespace Skyblivion.ESReader.Struct
     public class Trie
     {
         private Dictionary<string, Trie> trie = new Dictionary<string, Trie>();
-        private object value = null;
+        private TES4LoadedRecord value = null;
         /*
         * Trie constructor
          *
          *  This is for internal use
         */
-        public Trie(object value = null)
+        public Trie(TES4LoadedRecord value = null)
         {
             this.value = value;
         }
@@ -29,7 +30,7 @@ namespace Skyblivion.ESReader.Struct
          *  mixed The value
          *  Overwrite existing value
         */
-        public void add(string str, object value, bool overWrite = true)
+        public void add(string str, TES4LoadedRecord value, bool overWrite = true)
         {
             if (str == "")
             {
@@ -86,7 +87,7 @@ namespace Skyblivion.ESReader.Struct
         /*
         * Search the Trie with a string
         */
-        public object search(string str)
+        public TES4LoadedRecord search(string str)
         {
             if (str == "")//WTM:  Change:  In PHP, this was empty(str), which returns true when str = "0"
             {
@@ -133,7 +134,7 @@ namespace Skyblivion.ESReader.Struct
             return new TrieIterator(null);
         }
 
-        public object _value()
+        public TES4LoadedRecord _value()
         {
             return this.value;
         }
