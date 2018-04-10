@@ -53,7 +53,7 @@ namespace Skyblivion.ESReader.TES4
             string subrecord = getSubrecord(type);
             if (subrecord == null) { return null; }
             string trimmed = subrecord.Trim('\0');
-            if(trimmed.StartsWith(" ")||trimmed.EndsWith(" ")) { throw new InvalidOperationException("Value started or ended with space:\r\n" + trimmed + "\r\nstring.Trim() should be called."); }
+            if (trimmed.StartsWith(" ") || trimmed.EndsWith(" ")) { throw new InvalidOperationException("Value started or ended with space:" + Environment.NewLine + trimmed + Environment.NewLine + "string.Trim() should be called."); }
             return trimmed;
         }
 

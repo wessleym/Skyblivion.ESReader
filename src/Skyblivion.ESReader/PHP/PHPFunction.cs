@@ -62,38 +62,27 @@ namespace Skyblivion.ESReader.PHP
         }
 
         public static byte[] GZUncompress(byte[] compressed)
-        {//https://stackoverflow.com/a/4080983/1325179
+        {//WTM:  Note:  PHP invoked gzuncompress, but from what I understand, GZip = header + deflate + footer.
+            //Since the data is missing a header and footer (as stated by GZipStream), DeflateStream will work.
+            //But I do need to skip the first two bytes.  See below.
             using (MemoryStream input = new MemoryStream())
             {
-                input.Write(new byte[] { 0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00 }, 0, 8);
                 input.Write(compressed, 0, compressed.Length);
-                input.Position = 0;
-                using (GZipStream gzip = new GZipStream(input, CompressionMode.Decompress))
+                input.Position = 2;//Skip the first two bytes:  http://george.chiramattel.com/blog/2007/09/deflatestream-block-length-does-not-match.html
+                using (DeflateStream deflate = new DeflateStream(input, CompressionMode.Decompress))
                 {
                     using (MemoryStream output = new MemoryStream())
                     {
-                        gzip.CopyTo(output);//In .NET Core, this line throws at System.IO.InvalidDataException:  "The archive entry was compressed using an unsupported compression method."
+                        deflate.CopyTo(output);
                         return output.ToArray();
                     }
                 }
             }
         }
 
-        public static byte[] GZCompress(byte[] uncompressed)
-        {
-            using (var memoryStream = new MemoryStream())
-            {
-                using (var gZipStream = new GZipStream(memoryStream, CompressionMode.Compress, true))
-                {
-                    gZipStream.Write(uncompressed, 0, uncompressed.Length);
-                }
-                return memoryStream.ToArray();
-            }
-        }
-
         public static int UnpackV(byte[] bytes)
         {
-            if (bytes.Length != 2 && bytes.Length != 4) { throw new ArgumentException("Length did not equal 4.", nameof(bytes)); }
+            if (bytes.Length != 2 && bytes.Length != 4) { throw new ArgumentException("Length did not equal 2 or 4.", nameof(bytes)); }
             const int baseNum = 256;
             int sum = 0;
             for (int i = 0; i < bytes.Length; i++)
