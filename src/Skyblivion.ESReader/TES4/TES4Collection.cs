@@ -1,7 +1,6 @@
 using Skyblivion.ESReader.Exceptions;
 using Skyblivion.ESReader.Extensions.IDictionaryExtensions;
 using Skyblivion.ESReader.Struct;
-using System;
 using System.Collections.Generic;
 
 namespace Skyblivion.ESReader.TES4
@@ -63,13 +62,10 @@ namespace Skyblivion.ESReader.TES4
         public TES4LoadedRecord findByEDID(string edid, bool throwNotFoundException)
         {
             string lowerEdid = edid.ToLower();
-            TES4LoadedRecord val = this.edidIndex.search(lowerEdid);
-            if (val == null)
-            {
-                if (throwNotFoundException) { throw new RecordNotFoundException("EDID " + edid + " not found."); }
-                return null;
-            }
-            return val;
+            TES4LoadedRecord record = this.edidIndex.search(lowerEdid);
+            if (record != null) { return record; }
+            if (throwNotFoundException) { throw new RecordNotFoundException("EDID " + edid + " not found."); }
+            return null;
         }
 
         public TrieIterator findByEDIDPrefix(string edid)
@@ -132,7 +128,7 @@ namespace Skyblivion.ESReader.TES4
             for (int i = 0; i < this.files.Count; i++)
             {
                 var file = files[i];
-                List<string> masters = file.getMasters();
+                string[] masters = file.getMasters();
                 //Index the file so it can see itself
                 //this.expandTables.Add(file.getName(), new Dictionary<int, int>() { { masters.Count, index } });
                 for (int x = 0; x <= 0xFF; ++x)
@@ -140,7 +136,7 @@ namespace Skyblivion.ESReader.TES4
                     AddToExpandTables(file.getName(), x, i);
                 }
 
-                for(int j=0;j<masters.Count;j++)
+                for(int j=0;j<masters.Length;j++)
                 {
                     var masterId = j;
                     var masterName = masters[j];

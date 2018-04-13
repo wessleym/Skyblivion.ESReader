@@ -120,10 +120,15 @@ namespace Skyblivion.ESReader.Struct
                     headPrefix = prefix.Substring(0, stringLength);
                     stringPrefix = str;
                 }
-                else
+                else if (prefixLength < stringLength)
                 {
                     headPrefix = prefix;
                     stringPrefix = str.Substring(0, prefixLength);
+                }
+                else
+                {
+                    headPrefix = prefix;
+                    stringPrefix = str;
                 }
 
                 if (headPrefix == stringPrefix)

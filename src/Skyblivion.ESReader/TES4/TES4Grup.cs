@@ -46,16 +46,16 @@ namespace Skyblivion.ESReader.TES4
         {
             long startPosition = fileContents.Position;
             byte[] headerBytes = fileContents.Read(GRUP_HEADER_SIZE);
-            string header = TES4File.ISO_8859_1.Value.GetString(headerBytes);
-            if (header.Substring(0, 4) != "GRUP")
+            string headerString = TES4File.ISO_8859_1.Value.GetString(headerBytes);
+            if (headerString.Substring(0, 4) != "GRUP")
             {
-                throw new InvalidESFileException("Invalid GRUP magic, found "+header.Substring(0, 4));
+                throw new InvalidESFileException("Invalid GRUP magic, found "+headerString.Substring(0, 4));
             }
 
-            this.size = PHPFunction.UnpackV(header.Substring(4, 4));
+            this.size = PHPFunction.UnpackV(headerBytes.Skip(4).Take(4).ToArray());
             if (isTopLevelGrup)
             {
-                this.type = TES4RecordType.First(header.Substring(8, 4));
+                this.type = TES4RecordType.First(headerString.Substring(8, 4));
             }
 
             long end = startPosition + this.size;
@@ -70,35 +70,36 @@ namespace Skyblivion.ESReader.TES4
                 switch (nextEntryType)
                 {
                     case "GRUP":
-                    {
-                        TES4Grup nestedGrup = new TES4Grup();
-                        foreach (var subrecord in nestedGrup.load(fileContents, file, scheme, false))
                         {
-                            yield return subrecord;
+                            TES4Grup nestedGrup = new TES4Grup();
+                            foreach (var subrecord in nestedGrup.load(fileContents, file, scheme, false))
+                            {
+                                yield return subrecord;
+                            }
+                            break;
                         }
-                        break;
-                    }
 
                     default:
-                    {
-                        string recordHeader = TES4File.ISO_8859_1.Value.GetString(fileContents.Read(TES4LoadedRecord.RECORD_HEADER_SIZE));
-                        TES4RecordType recordType = TES4RecordType.First(recordHeader.Substring(0, 4));
-                        int recordSize = PHPFunction.UnpackV(recordHeader.Substring(4, 4));
-                        int recordFormid = PHPFunction.UnpackV(recordHeader.Substring(0xC, 4));
-                        int recordFlags = PHPFunction.UnpackV(recordHeader.Substring(8, 4));
-                        if (scheme.shouldLoad(recordType))
                         {
-                            TES4LoadedRecord record = new TES4LoadedRecord(file, recordType, recordFormid, recordSize, recordFlags);
-                            record.load(fileContents, scheme.getRulesFor(recordType));
-                            this.records.Add(record);
-                            yield return record;
+                            byte[] recordHeaderBytes = fileContents.Read(TES4LoadedRecord.RECORD_HEADER_SIZE);
+                            string recordTypeString = TES4File.ISO_8859_1.Value.GetString(recordHeaderBytes.Take(4).ToArray());
+                            TES4RecordType recordType = TES4RecordType.First(recordTypeString);
+                            int recordSize = PHPFunction.UnpackV(recordHeaderBytes.Skip(4).Take(4).ToArray());
+                            int recordFlags = PHPFunction.UnpackV(recordHeaderBytes.Skip(8).Take(4).ToArray());
+                            int recordFormid = PHPFunction.UnpackV(recordHeaderBytes.Skip(12).Take(4).ToArray());
+                            if (scheme.shouldLoad(recordType))
+                            {
+                                TES4LoadedRecord record = new TES4LoadedRecord(file, recordType, recordFormid, recordSize, recordFlags);
+                                record.load(fileContents, scheme.getRulesFor(recordType));
+                                this.records.Add(record);
+                                yield return record;
+                            }
+                            else
+                            {
+                                fileContents.Seek(recordSize, SeekOrigin.Current);
+                            }
+                            break;
                         }
-                        else
-                        {
-                            fileContents.Seek(recordSize, SeekOrigin.Current);
-                        }
-                        break;
-                    }
                 }
             }
         }

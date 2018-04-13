@@ -47,18 +47,11 @@ namespace Skyblivion.ESReader.PHP
         public static string UCWords(string s)
         {
             if (s == null) { throw new ArgumentNullException(nameof(s)); }
-            return s.Aggregate("",
-              (working, next) =>
-              {
-                  return working.Length == 0 && next != ' ' ?
-                    next.ToString().ToUpper() :
-                    (
-                        working.EndsWith(" ") ?
-                        working + next.ToString().ToUpper() :
-                        working + next.ToString()
-                    );
-              }
-            );
+            if (s.Contains(" "))
+            {
+                throw new InvalidOperationException("This implementation of UCWords is only meant to make the first character uppercase, not process words like the real PHP version of UCWords");
+            }
+            return s.Substring(0, 1).ToUpper() + s.Substring(1);
         }
 
         public static byte[] GZUncompress(byte[] compressed)
@@ -91,10 +84,6 @@ namespace Skyblivion.ESReader.PHP
                 sum += byteInt * (int)Math.Pow(baseNum, i);
             }
             return sum;
-        }
-        public static int UnpackV(string str)
-        {
-            return UnpackV(str.Select(c=>(byte)c).ToArray());
         }
 
         public static string Substr(string str, int length)

@@ -17,7 +17,7 @@ namespace Skyblivion.ESReader.TES4
         private int flags;
         private int size;
         private TES4RecordType type;
-        private Dictionary<string, List<string>> data = new Dictionary<string, List<string>>();
+        private Dictionary<string, List<byte[]>> data = new Dictionary<string, List<byte[]>>();
         private Dictionary<string, int> dataAsFormidCache = new Dictionary<string, int>();
         /*
         * TES4LoadedRecord constructor.
@@ -36,23 +36,38 @@ namespace Skyblivion.ESReader.TES4
             return this.type;
         }
 
-        public List<string> getSubrecords(string type)
+        public List<byte[]> getSubrecords(string type)
         {
-            return this.data.GetWithFallback(type, () => new List<string>());
+            return this.data.GetWithFallback(type, () => new List<byte[]>());
         }
 
-        public string getSubrecord(string type)
+        public string[] getSubrecordsStrings(string type)
         {
-            List<string> list;
+            return getSubrecords(type).Select(r=>getSubrecordString(r)).ToArray();
+        }
+
+        public byte[] getSubrecord(string type)
+        {
+            List<byte[]> list;
             if (!this.data.TryGetValue(type, out list) || !this.data[type].Any()) { return null; }
             return list[0];
         }
 
+        private static string getSubrecordString(byte[] bytes)
+        {
+            return TES4File.ISO_8859_1.Value.GetString(bytes);
+        }
+        public string getSubrecordString(string type)
+        {
+            return getSubrecordString(getSubrecord(type));
+        }
+
         public string getSubrecordTrim(string type)
         {
-            string subrecord = getSubrecord(type);
+            byte[] subrecord = getSubrecord(type);
             if (subrecord == null) { return null; }
-            string trimmed = subrecord.Trim('\0');
+            string subrecordString = getSubrecordString(subrecord);
+            string trimmed = subrecordString.Trim('\0');
             if (trimmed.StartsWith(" ") || trimmed.EndsWith(" ")) { throw new InvalidOperationException("Value started or ended with space:" + Environment.NewLine + trimmed + Environment.NewLine + "string.Trim() should be called."); }
             return trimmed;
         }
@@ -68,13 +83,9 @@ namespace Skyblivion.ESReader.TES4
         {
             int value;
             if(this.dataAsFormidCache.TryGetValue(type, out value)) { return value; }
-            string subrecord = this.getSubrecord(type);
-            if (null == subrecord) { return null; }
-            if (subrecord.Length < 4)
-            {
-                return null;
-            }
-            value = this.placedFile.expand(PHPFunction.UnpackV(subrecord.Substring(0, 4)));
+            byte[] subrecord = this.getSubrecord(type);
+            if (subrecord == null || subrecord.Length < 4) { return null; }
+            value = this.placedFile.expand(PHPFunction.UnpackV(subrecord.Take(4).ToArray()));
             this.dataAsFormidCache.Add(type, value);
             return value;
         }
@@ -112,7 +123,7 @@ namespace Skyblivion.ESReader.TES4
                 int subrecordSize = PHPFunction.UnpackV(fileData.Skip(i + 4).Take(2).ToArray());
                 if (scheme.shouldLoad(subrecordType))
                 {
-                    string subrecordData = TES4File.ISO_8859_1.Value.GetString(fileData, i + 6, subrecordSize);
+                    byte[] subrecordData = fileData.Skip(i+6).Take(subrecordSize).ToArray();
                     this.data.AddNewListIfNotContainsKeyAndAddValueToList(subrecordType, subrecordData);
                 }
 

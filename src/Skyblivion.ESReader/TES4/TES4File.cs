@@ -16,7 +16,7 @@ namespace Skyblivion.ESReader.TES4
         const int TES4_HEADER_SIZE = 0x18;
         private string path;
         private string name;
-        private List<string> masters = new List<string>();
+        private string[] masters;
         private bool initialized = false;
         private Dictionary<TES4RecordType, TES4Grup> grups = new Dictionary<TES4RecordType, TES4Grup>();
         private TES4Collection collection;
@@ -35,7 +35,7 @@ namespace Skyblivion.ESReader.TES4
             return this.name;
         }
 
-        public List<string> getMasters()
+        public string[] getMasters()
         {
             if (!this.initialized)
             {
@@ -63,15 +63,15 @@ namespace Skyblivion.ESReader.TES4
                     byte[] headerBytes = new byte[TES4Grup.GRUP_HEADER_SIZE];
                     int read = contents.Read(headerBytes);
                     if (read == 0) { break; }
-                    string header = ISO_8859_1.Value.GetString(headerBytes);
-                    if (header.Substring(0, 4) != "GRUP")
+                    string headerString = ISO_8859_1.Value.GetString(headerBytes);
+                    if (headerString.Substring(0, 4) != "GRUP")
                     {
-                        throw new InvalidESFileException("Invalid GRUP magic, found " + header.Substring(0, 4));
+                        throw new InvalidESFileException("Invalid GRUP magic, found " + headerString.Substring(0, 4));
                     }
                     contents.Seek(-TES4Grup.GRUP_HEADER_SIZE, SeekOrigin.Current);
 
-                    int grupSize = PHPFunction.UnpackV(header.Substring(4, 4));
-                    TES4RecordType grupType = TES4RecordType.First(header.Substring(8, 4));
+                    int grupSize = PHPFunction.UnpackV(headerBytes.Skip(4).Take(4).ToArray());
+                    TES4RecordType grupType = TES4RecordType.First(headerString.Substring(8, 4));
                     TES4Grup grup = new TES4Grup();
                     if (scheme.shouldLoad(grupType))
                     {
@@ -119,7 +119,7 @@ namespace Skyblivion.ESReader.TES4
             {
                 tes4record = this.fetchTES4(file);
             }
-            masters = tes4record.getSubrecords("MAST");
+            masters = tes4record.getSubrecordsStrings("MAST");
             this.initialized = true;
         }
     }
