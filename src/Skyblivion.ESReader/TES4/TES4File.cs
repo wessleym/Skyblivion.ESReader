@@ -1,10 +1,10 @@
 using Skyblivion.ESReader.Exceptions;
 using Skyblivion.ESReader.Extensions.IDictionaryExtensions;
 using Skyblivion.ESReader.Extensions.StreamExtensions;
-using Skyblivion.ESReader.Extensions.TextReaderExtensions;
 using Skyblivion.ESReader.PHP;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -55,6 +55,7 @@ namespace Skyblivion.ESReader.TES4
         public IEnumerable<ITES4Record> load(TES4FileLoadScheme scheme)
         {
             Console.Write("Processing " + nameof(TES4File) + " Data...");
+            Stopwatch stopwatch = Stopwatch.StartNew();
             using (FileStream contents = GetFile())
             {
                 this.fetchTES4(contents);
@@ -88,7 +89,8 @@ namespace Skyblivion.ESReader.TES4
                     this.grups.Add(grup.getType(), grup);
                 }
             }
-            Console.WriteLine("\rProcessing " + nameof(TES4File) + " Complete");
+            stopwatch.Stop();
+            Console.WriteLine("\rProcessing " + nameof(TES4File) + " Complete (" + stopwatch.ElapsedMilliseconds + " ms)");
         }
 
         public TES4Grup getGrup(TES4RecordType type)
