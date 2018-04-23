@@ -87,10 +87,10 @@ namespace Skyblivion.ESReader.TES4
                             int recordSize = PHPFunction.UnpackV(recordHeaderBytes.Skip(4).Take(4).ToArray());
                             int recordFlags = PHPFunction.UnpackV(recordHeaderBytes.Skip(8).Take(4).ToArray());
                             int recordFormid = PHPFunction.UnpackV(recordHeaderBytes.Skip(12).Take(4).ToArray());
-                            if (scheme.shouldLoad(recordType))
+                            if (scheme.ShouldLoad(recordType))
                             {
                                 TES4LoadedRecord record = new TES4LoadedRecord(file, recordType, recordFormid, recordSize, recordFlags);
-                                record.load(fileContents, scheme.getRulesFor(recordType));
+                                record.load(fileContents, scheme.GetRulesFor(recordType));
                                 this.records.Add(record);
                                 yield return record;
                             }
