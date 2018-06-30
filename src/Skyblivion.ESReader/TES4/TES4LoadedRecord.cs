@@ -84,7 +84,7 @@ namespace Skyblivion.ESReader.TES4
             if(this.dataAsFormidCache.TryGetValue(type, out value)) { return value; }
             byte[] subrecord = this.getSubrecord(type);
             if (subrecord == null || subrecord.Length < 4) { return null; }
-            value = this.placedFile.expand(PHPFunction.UnpackV(subrecord.Take(4).ToArray()));
+            value = this.placedFile.Expand(PHPFunction.UnpackV(subrecord.Take(4).ToArray()));
             this.dataAsFormidCache.Add(type, value);
             return value;
         }
@@ -93,7 +93,7 @@ namespace Skyblivion.ESReader.TES4
         {
             if (this.expandedFormid == null)
             {
-                this.expandedFormid = this.placedFile.expand(this.formid);
+                this.expandedFormid = this.placedFile.Expand(this.formid);
             }
 
             return this.expandedFormid.Value;

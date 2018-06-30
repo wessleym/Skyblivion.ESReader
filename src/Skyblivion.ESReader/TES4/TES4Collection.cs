@@ -79,7 +79,7 @@ namespace Skyblivion.ESReader.TES4
             List<TES4Grup> grups = new List<TES4Grup>();
             foreach (var file in this.files)
             {
-                TES4Grup grup = file.getGrup(type);
+                TES4Grup grup = file.GetGrup(type);
                 if (grup != null)
                 {
                     grups.Add(grup);
@@ -122,18 +122,18 @@ namespace Skyblivion.ESReader.TES4
             Dictionary<string, int> fileToIndex = new Dictionary<string, int>();
             for (int i = 0; i < this.files.Count; i++)
             {
-                fileToIndex[files[i].getName()] = i;
+                fileToIndex[files[i].Name] = i;
             }
 
             for (int i = 0; i < this.files.Count; i++)
             {
                 var file = files[i];
-                string[] masters = file.getMasters();
+                string[] masters = file.Masters;
                 //Index the file so it can see itself
                 //this.expandTables.Add(file.getName(), new Dictionary<int, int>() { { masters.Count, index } });
                 for (int x = 0; x <= 0xFF; ++x)
                 {
-                    AddToExpandTables(file.getName(), x, i);
+                    AddToExpandTables(file.Name, x, i);
                 }
 
                 for(int j=0;j<masters.Length;j++)
@@ -147,9 +147,9 @@ namespace Skyblivion.ESReader.TES4
                     }
                     catch (KeyNotFoundException)
                     {
-                        throw new InconsistentESFilesException("File "+file.getName()+" references a master not present in collection.");
+                        throw new InconsistentESFilesException("File "+file.Name+" references a master not present in collection.");
                     }
-                    AddToExpandTables(file.getName(), masterId, expandedIndex);
+                    AddToExpandTables(file.Name, masterId, expandedIndex);
                 }
             }
         }

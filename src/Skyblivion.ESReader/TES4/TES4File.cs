@@ -15,9 +15,8 @@ namespace Skyblivion.ESReader.TES4
     {
         const int TES4_HEADER_SIZE = 0x18;
         private string path;
-        private string name;
-        private string[] masters;
-        private bool initialized = false;
+        public string Name { get; private set; }
+        private Lazy<string[]> masters;
         private Dictionary<TES4RecordType, TES4Grup> grups = new Dictionary<TES4RecordType, TES4Grup>();
         private TES4Collection collection;
         /*
@@ -27,28 +26,24 @@ namespace Skyblivion.ESReader.TES4
         {
             this.collection = collection;
             this.path = path;
-            this.name = name;
+            this.Name = name;
+            masters = new Lazy<string[]>(() =>
+              {
+                  TES4LoadedRecord tes4record;
+                  using (FileStream file = GetFile())
+                  {
+                      tes4record = this.FetchTES4(file);
+                  }
+                  return tes4record.getSubrecordsStrings("MAST");
+              });
         }
 
-        public string getName()
-        {
-            return this.name;
-        }
-
-        public string[] getMasters()
-        {
-            if (!this.initialized)
-            {
-                this.initialize();
-            }
-
-            return this.masters;
-        }
+        public string[] Masters => this.masters.Value;
 
         public static readonly Lazy<Encoding> ISO_8859_1 = new Lazy<Encoding>(() => Encoding.GetEncoding("iso-8859-1"));
         private FileStream GetFile()
         {
-            string filePath = Path.Combine(this.path, this.name);
+            string filePath = Path.Combine(this.path, this.Name);
             return new FileStream(filePath, FileMode.Open);
         }
 
@@ -58,7 +53,7 @@ namespace Skyblivion.ESReader.TES4
             Stopwatch stopwatch = Stopwatch.StartNew();
             using (FileStream contents = GetFile())
             {
-                this.fetchTES4(contents);
+                this.FetchTES4(contents);
                 while (true)
                 {
                     byte[] headerBytes = new byte[TES4Grup.GRUP_HEADER_SIZE];
@@ -93,17 +88,17 @@ namespace Skyblivion.ESReader.TES4
             Console.WriteLine("\rProcessing " + nameof(TES4File) + " Complete (" + stopwatch.ElapsedMilliseconds + " ms)");
         }
 
-        public TES4Grup getGrup(TES4RecordType type)
+        public TES4Grup GetGrup(TES4RecordType type)
         {
             return this.grups.GetWithFallback(type, () => null);
         }
 
-        public int expand(int formid)
+        public int Expand(int formid)
         {
-            return this.collection.expand(formid, this.getName());
+            return this.collection.expand(formid, this.Name);
         }
 
-        private TES4LoadedRecord fetchTES4(FileStream stream)
+        private TES4LoadedRecord FetchTES4(FileStream stream)
         {
             byte[] recordHeader = stream.Read(TES4LoadedRecord.RECORD_HEADER_SIZE);
             int recordSize = PHPFunction.UnpackV(recordHeader.Skip(4).Take(4).ToArray());//Throw away the first four bytes.
@@ -112,17 +107,6 @@ namespace Skyblivion.ESReader.TES4
             TES4LoadedRecord tes4record = new TES4LoadedRecord(this, TES4RecordType.TES4, recordFormid, recordSize, recordFlags);
             tes4record.load(stream, new TES4RecordLoadScheme(new string[] { "MAST" }));
             return tes4record;
-        }
-
-        private void initialize()
-        {
-            TES4LoadedRecord tes4record;
-            using (FileStream file = GetFile())
-            {
-                tes4record = this.fetchTES4(file);
-            }
-            masters = tes4record.getSubrecordsStrings("MAST");
-            this.initialized = true;
         }
     }
 }
