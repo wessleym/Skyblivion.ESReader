@@ -6,12 +6,13 @@ namespace Skyblivion.ESReader.TES4
     public interface ITES4Record
     {
         int GetFormId();
-        TES4RecordType getType();
-        Nullable<int> getSubrecordAsFormid(string type);
-        byte[] getSubrecord(string type);
-        string getSubrecordString(string type);
-        string getSubrecordTrim(string type);
-        string getSubrecordTrimLower(string type);
-        List<byte[]> getSubrecords(string type);
+        TES4RecordType RecordType { get; }
+
+        Nullable<int> GetSubrecordAsFormid(string type);
+        byte[] GetSubrecord(string type);
+        string GetSubrecordString(string type);
+        string GetSubrecordTrim(string type);
+        string GetSubrecordTrimLower(string type);
+        List<byte[]> GetSubrecords(string type);
     }
 }

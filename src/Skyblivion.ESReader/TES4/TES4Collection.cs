@@ -40,7 +40,7 @@ namespace Skyblivion.ESReader.TES4
                     int formid = loadedRecord.GetFormId();
                     //TODO resolve conflicts
                     this.records.Add(formid, loadedRecord);
-                    string edid = loadedRecord.getSubrecordTrimLower("EDID");
+                    string edid = loadedRecord.GetSubrecordTrimLower("EDID");
                     if (edid != null)
                     {
                         this.edidIndex.Add(edid, loadedRecord);
