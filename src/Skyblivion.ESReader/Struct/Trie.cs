@@ -30,7 +30,7 @@ namespace Skyblivion.ESReader.Struct
          *  mixed The value
          *  Overwrite existing value
         */
-        public void add(string str, TES4LoadedRecord value, bool overWrite = true)
+        public void Add(string str, TES4LoadedRecord value, bool overWrite = true)
         {
             if (str == "")
             {
@@ -77,7 +77,7 @@ namespace Skyblivion.ESReader.Struct
 
                 if (equals)
                 {
-                    trie.add(str.Substring(prefixLength), value, overWrite);
+                    trie.Add(str.Substring(prefixLength), value, overWrite);
                     return;
                 }
             }
@@ -87,7 +87,7 @@ namespace Skyblivion.ESReader.Struct
         /*
         * Search the Trie with a string
         */
-        public TES4LoadedRecord search(string str)
+        public TES4LoadedRecord Search(string str)
         {
             if (str == "")//WTM:  Change:  In PHP, this was empty(str), which returns true when str = "0"
             {
@@ -99,13 +99,13 @@ namespace Skyblivion.ESReader.Struct
                 if (str.StartsWith(prefix))
                 {
                     var trie = kvp.Value;
-                    return trie.search(str.Substring(prefix.Length));
+                    return trie.Search(str.Substring(prefix.Length));
                 }
             }
             return null;
         }
 
-        public TrieIterator searchPrefix(string str)
+        public TrieIterator SearchPrefix(string str)
         {
             if (str == "") { return new TrieIterator(this); }
             int stringLength = str.Length;
@@ -133,7 +133,7 @@ namespace Skyblivion.ESReader.Struct
 
                 if (headPrefix == stringPrefix)
                 {
-                    return trie.searchPrefix(str.Substring(prefixLength));
+                    return trie.SearchPrefix(str.Substring(prefixLength));
                 }
             }
             return new TrieIterator(null);
@@ -144,7 +144,7 @@ namespace Skyblivion.ESReader.Struct
             return this.value;
         }
 
-        public Dictionary<string, Trie> subnodes()
+        public Dictionary<string, Trie> Subnodes()
         {
             return this.trie;
         }

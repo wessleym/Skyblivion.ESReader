@@ -4,8 +4,8 @@ namespace Skyblivion.ESReader
 {
     class TES5File//WTM:  Note:  Unused
     {
-        private string path;
-        private string name;
+        private readonly string path;
+        private readonly string name;
         //private masters;//WTM:  Change:  Commented since unused
         //private groups;//WTM:  Change:  Commented since unused
         /*
@@ -17,7 +17,7 @@ namespace Skyblivion.ESReader
             this.name = name;
         }
 
-        public void load()
+        public void Load()
         {
             string filepath = Path.Combine(this.path, this.name);
             //h = fopen(filepath, "rb");//WTM:  Change:  Commented since unused

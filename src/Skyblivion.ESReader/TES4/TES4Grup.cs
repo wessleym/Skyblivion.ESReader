@@ -16,24 +16,14 @@ namespace Skyblivion.ESReader.TES4
     public class TES4Grup : IEnumerable<ITES4Record>
     {
         public const int GRUP_HEADER_SIZE = 20;
-        private int size;
-        private TES4RecordType type;
-        private List<ITES4Record> records = new List<ITES4Record>();
-        public int getSize()
-        {
-            return this.size;
-        }
-
-        public TES4RecordType getType()
-        {
-            return this.type;
-        }
+        public int Size { get; private set; }
+        public TES4RecordType Type { get; private set; }
+        private readonly List<ITES4Record> records = new List<ITES4Record>();
 
         public IEnumerator<ITES4Record> GetEnumerator()
         {
             return records.GetEnumerator();
         }
-
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
@@ -42,7 +32,7 @@ namespace Skyblivion.ESReader.TES4
         /*
              * @throws InvalidESFileException
         */
-        public IEnumerable<ITES4Record> load(FileStream fileContents, TES4File file, TES4GrupLoadScheme scheme, bool isTopLevelGrup)
+        public IEnumerable<ITES4Record> Load(FileStream fileContents, TES4File file, TES4GrupLoadScheme scheme, bool isTopLevelGrup)
         {
             long startPosition = fileContents.Position;
             byte[] headerBytes = fileContents.Read(GRUP_HEADER_SIZE);
@@ -52,13 +42,13 @@ namespace Skyblivion.ESReader.TES4
                 throw new InvalidESFileException("Invalid GRUP magic, found "+headerString.Substring(0, 4));
             }
 
-            this.size = PHPFunction.UnpackV(headerBytes.Skip(4).Take(4).ToArray());
+            this.Size = PHPFunction.UnpackV(headerBytes.Skip(4).Take(4).ToArray());
             if (isTopLevelGrup)
             {
-                this.type = TES4RecordType.First(headerString.Substring(8, 4));
+                this.Type = TES4RecordType.First(headerString.Substring(8, 4));
             }
 
-            long end = startPosition + this.size;
+            long end = startPosition + this.Size;
             while (fileContents.Position < end)
             {
                 //Ineffective lookahead, but oh well
@@ -72,7 +62,7 @@ namespace Skyblivion.ESReader.TES4
                     case "GRUP":
                         {
                             TES4Grup nestedGrup = new TES4Grup();
-                            foreach (var subrecord in nestedGrup.load(fileContents, file, scheme, false))
+                            foreach (var subrecord in nestedGrup.Load(fileContents, file, scheme, false))
                             {
                                 yield return subrecord;
                             }
@@ -90,7 +80,7 @@ namespace Skyblivion.ESReader.TES4
                             if (scheme.ShouldLoad(recordType))
                             {
                                 TES4LoadedRecord record = new TES4LoadedRecord(file, recordType, recordFormid, recordSize, recordFlags);
-                                record.load(fileContents, scheme.GetRulesFor(recordType));
+                                record.Load(fileContents, scheme.GetRulesFor(recordType));
                                 this.records.Add(record);
                                 yield return record;
                             }

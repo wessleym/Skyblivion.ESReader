@@ -10,8 +10,8 @@ namespace Skyblivion.ESReader.Struct
      */
     public class TrieIterator
     {
-        private int k;
-        private Trie root;
+        public int Key { get; private set; }
+        private readonly Trie root;
         private Trie current;
         private Stack<Trie> stack;
         /*
@@ -22,7 +22,7 @@ namespace Skyblivion.ESReader.Struct
             this.root = root;
             if (null != this.root)
             {
-                this.rewind();
+                this.Rewind();
             }
         }
 
@@ -35,42 +35,37 @@ namespace Skyblivion.ESReader.Struct
             return null;
         }
 
-        public void next()
+        public void Next()
         {
             /*
              * Expand the current node to children
              */
-            foreach (var subnode in this.current.subnodes())
+            foreach (var subnode in this.current.Subnodes())
             {
-                this.pushNodeForIteration(subnode.Value);
+                this.PushNodeForIteration(subnode.Value);
             }
 
-            this.popNodeForIteration();
-            this.k++;
+            this.PopNodeForIteration();
+            this.Key++;
         }
 
-        public int key()
-        {
-            return this.k;
-        }
-
-        public bool valid()
+        public bool Valid()
         {
             return this.current != null;
         }
 
-        public void rewind()
+        public void Rewind()
         {
-            this.k = 0;
+            this.Key = 0;
             this.stack = new Stack<Trie>();
             if (null != this.root)
             {
-                this.pushNodeForIteration(this.root);
-                this.popNodeForIteration();
+                this.PushNodeForIteration(this.root);
+                this.PopNodeForIteration();
             }
         }
 
-        private void pushNodeForIteration(Trie trie)
+        private void PushNodeForIteration(Trie trie)
         {
             /*
              * There can be intermediary nodes that weren"t directly inserted
@@ -89,13 +84,13 @@ namespace Skyblivion.ESReader.Struct
                     }
                     else
                     {
-                        nodesToTravel.Push(currentNode.subnodes().Select(kvp=>kvp.Value).ToArray());
+                        nodesToTravel.Push(currentNode.Subnodes().Select(kvp=>kvp.Value).ToArray());
                     }
                 }
             }
         }
 
-        private void popNodeForIteration()
+        private void PopNodeForIteration()
         {
             /*
              * Pop the next node

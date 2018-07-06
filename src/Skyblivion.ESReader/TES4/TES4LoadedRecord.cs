@@ -11,14 +11,14 @@ namespace Skyblivion.ESReader.TES4
     public class TES4LoadedRecord : ITES4Record
     {
         public const int RECORD_HEADER_SIZE = 20;
-        private TES4File placedFile;
-        private int formid;
+        private readonly TES4File placedFile;
+        private readonly int formid;
         private Nullable<int> expandedFormid;
-        private int flags;
+        private readonly int flags;
         private int size;
-        private TES4RecordType type;
-        private Dictionary<string, List<byte[]>> data = new Dictionary<string, List<byte[]>>();
-        private Dictionary<string, int> dataAsFormidCache = new Dictionary<string, int>();
+        private readonly TES4RecordType type;
+        private readonly Dictionary<string, List<byte[]>> data = new Dictionary<string, List<byte[]>>();
+        private readonly Dictionary<string, int> dataAsFormidCache = new Dictionary<string, int>();
         /*
         * TES4LoadedRecord constructor.
         */
@@ -41,9 +41,9 @@ namespace Skyblivion.ESReader.TES4
             return this.data.GetWithFallback(type, () => new List<byte[]>());
         }
 
-        public string[] getSubrecordsStrings(string type)
+        public string[] GetSubrecordsStrings(string type)
         {
-            return getSubrecords(type).Select(r=>getSubrecordString(r)).ToArray();
+            return getSubrecords(type).Select(r=>GetSubrecordString(r)).ToArray();
         }
 
         public byte[] getSubrecord(string type)
@@ -53,20 +53,20 @@ namespace Skyblivion.ESReader.TES4
             return list[0];
         }
 
-        private static string getSubrecordString(byte[] bytes)
+        private static string GetSubrecordString(byte[] bytes)
         {
             return TES4File.ISO_8859_1.Value.GetString(bytes);
         }
         public string getSubrecordString(string type)
         {
-            return getSubrecordString(getSubrecord(type));
+            return GetSubrecordString(getSubrecord(type));
         }
 
         public string getSubrecordTrim(string type)
         {
             byte[] subrecord = getSubrecord(type);
             if (subrecord == null) { return null; }
-            string subrecordString = getSubrecordString(subrecord);
+            string subrecordString = GetSubrecordString(subrecord);
             string trimmed = subrecordString.Trim('\0').Trim();
             return trimmed;
         }
@@ -89,7 +89,7 @@ namespace Skyblivion.ESReader.TES4
             return value;
         }
 
-        public int getFormId()
+        public int GetFormId()
         {
             if (this.expandedFormid == null)
             {
@@ -99,7 +99,7 @@ namespace Skyblivion.ESReader.TES4
             return this.expandedFormid.Value;
         }
 
-        public void load(Stream file, TES4RecordLoadScheme scheme)
+        public void Load(Stream file, TES4RecordLoadScheme scheme)
         {
             if (this.size == 0)
             {
