@@ -76,7 +76,7 @@ namespace Skyblivion.ESReader.TES4
         public Nullable<int> GetSubrecordAsFormid(string type)
         {
             int value;
-            if(this.dataAsFormidCache.TryGetValue(type, out value)) { return value; }
+            if (this.dataAsFormidCache.TryGetValue(type, out value)) { return value; }
             byte[] subrecord = this.GetSubrecord(type);
             if (subrecord == null || subrecord.Length < 4) { return null; }
             value = this.placedFile.Expand(PHPFunction.UnpackV(subrecord.Take(4).ToArray()));
