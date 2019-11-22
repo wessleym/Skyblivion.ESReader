@@ -41,11 +41,11 @@ namespace Skyblivion.ESReader.TES4
             return GetSubrecords(type).Select(r=>GetSubrecordString(r)).ToArray();
         }
 
-        public byte[] GetSubrecord(string type)
+        public byte[]? GetSubrecord(string type)
         {
             List<byte[]> list;
-            if (!this.data.TryGetValue(type, out list) || !this.data[type].Any()) { return null; }
-            return list[0];
+            if (this.data.TryGetValue(type, out list) && this.data[type].Any()) { return list[0]; }
+            return null;
         }
 
         private static string GetSubrecordString(byte[] bytes)
@@ -54,34 +54,42 @@ namespace Skyblivion.ESReader.TES4
         }
         public string GetSubrecordString(string type)
         {
-            return GetSubrecordString(GetSubrecord(type));
+            byte[]? subrecord = GetSubrecord(type);
+            if (subrecord == null) { throw new InvalidOperationException(nameof(type) + " " + type + " resulted in a null " + nameof(subrecord) + "."); }
+            return GetSubrecordString(subrecord);
         }
 
-        public string GetSubrecordTrim(string type)
+        public string? GetSubrecordTrim(string type)
         {
-            byte[] subrecord = GetSubrecord(type);
+            byte[]? subrecord = GetSubrecord(type);
             if (subrecord == null) { return null; }
             string subrecordString = GetSubrecordString(subrecord);
             string trimmed = subrecordString.Trim('\0').Trim();
             return trimmed;
         }
 
-        public string GetSubrecordTrimLower(string type)
+        public string? GetSubrecordTrimLower(string type)
         {
-            string subrecord = GetSubrecordTrim(type);
+            string? subrecord = GetSubrecordTrim(type);
             if (subrecord == null) { return null; }
             return subrecord.ToLower();
         }
 
-        public Nullable<int> GetSubrecordAsFormid(string type)
+        public Nullable<int> GetSubrecordAsFormidNullable(string type)
         {
             int value;
             if (this.dataAsFormidCache.TryGetValue(type, out value)) { return value; }
-            byte[] subrecord = this.GetSubrecord(type);
+            byte[]? subrecord = this.GetSubrecord(type);
             if (subrecord == null || subrecord.Length < 4) { return null; }
             value = this.placedFile.Expand(PHPFunction.UnpackV(subrecord.Take(4).ToArray()));
             this.dataAsFormidCache.Add(type, value);
             return value;
+        }
+        public int GetSubrecordAsFormid(string type)
+        {
+            Nullable<int> formid = GetSubrecordAsFormidNullable(type);
+            if (formid != null) { return formid.Value; }
+            throw new InvalidOperationException(nameof(formid) + " was null for " + nameof(type) + " " + type + ".");
         }
 
         public int GetFormId()

@@ -71,7 +71,9 @@ namespace Skyblivion.ESReader.TES4
                     TES4Grup grup = new TES4Grup();
                     if (scheme.shouldLoad(grupType))
                     {
-                        foreach (var loadedRecord in grup.Load(contents, this, scheme.getRulesFor(grupType), true))
+                        TES4GrupLoadScheme? rules = scheme.getRulesFor(grupType);
+                        if (rules == null) { throw new InvalidOperationException(nameof(rules) + " was null for " + nameof(grupType) + " " + grupType.Name + "."); }
+                        foreach (var loadedRecord in grup.Load(contents, this, rules, true))
                         {
                             yield return loadedRecord;
                         }
@@ -81,6 +83,7 @@ namespace Skyblivion.ESReader.TES4
                         contents.Seek(grupSize, SeekOrigin.Current);
                     }
 
+                    if (grup.Type == null) { throw new InvalidOperationException(nameof(grup.Type) + " was null."); }
                     this.grups.Add(grup.Type, grup);
                 }
             }
@@ -88,9 +91,9 @@ namespace Skyblivion.ESReader.TES4
             Console.WriteLine("\rProcessing " + nameof(TES4File) + " Complete (" + stopwatch.ElapsedMilliseconds + " ms)");
         }
 
-        public TES4Grup GetGrup(TES4RecordType type)
+        public TES4Grup? GetGrup(TES4RecordType type)
         {
-            return this.grups.GetWithFallback(type, () => null);
+            return this.grups.GetWithFallbackNullable(type, () => null);
         }
 
         public int Expand(int formid)

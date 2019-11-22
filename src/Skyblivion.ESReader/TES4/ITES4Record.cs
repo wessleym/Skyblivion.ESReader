@@ -8,11 +8,11 @@ namespace Skyblivion.ESReader.TES4
         int GetFormId();
         TES4RecordType RecordType { get; }
 
-        Nullable<int> GetSubrecordAsFormid(string type);
-        byte[] GetSubrecord(string type);
+        Nullable<int> GetSubrecordAsFormidNullable(string type);
+        byte[]? GetSubrecord(string type);
         string GetSubrecordString(string type);
-        string GetSubrecordTrim(string type);
-        string GetSubrecordTrimLower(string type);
+        string? GetSubrecordTrim(string type);
+        string? GetSubrecordTrimLower(string type);
         List<byte[]> GetSubrecords(string type);
     }
 }

@@ -16,9 +16,9 @@ namespace Skyblivion.ESReader.TES4
             return this.grups.ContainsKey(type);
         }
 
-        public TES4GrupLoadScheme getRulesFor(TES4RecordType type)
+        public TES4GrupLoadScheme? getRulesFor(TES4RecordType type)
         {
-            return this.grups.GetWithFallback(type, () => null);
+            return this.grups.GetWithFallbackNullable(type, () => null);
         }
     }
 }

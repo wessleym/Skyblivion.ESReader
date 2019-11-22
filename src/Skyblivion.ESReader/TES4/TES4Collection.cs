@@ -40,7 +40,7 @@ namespace Skyblivion.ESReader.TES4
                     int formid = loadedRecord.GetFormId();
                     //TODO resolve conflicts
                     this.records.Add(formid, loadedRecord);
-                    string edid = loadedRecord.GetSubrecordTrimLower("EDID");
+                    string? edid = loadedRecord.GetSubrecordTrimLower("EDID");
                     if (edid != null)
                     {
                         this.edidIndex.Add(edid, loadedRecord);
@@ -59,13 +59,21 @@ namespace Skyblivion.ESReader.TES4
             throw new RecordNotFoundException("Form " + formid.ToString() + " not found.");
         }
 
-        public TES4LoadedRecord FindByEDID(string edid, bool throwNotFoundException)
+        private TES4LoadedRecord? TryFindByEDID(string edid, bool throwNotFoundException)
         {
             string lowerEdid = edid.ToLower();
-            TES4LoadedRecord record = this.edidIndex.Search(lowerEdid);
+            TES4LoadedRecord? record = this.edidIndex.Search(lowerEdid);
             if (record != null) { return record; }
             if (throwNotFoundException) { throw new RecordNotFoundException("EDID " + edid + " not found."); }
             return null;
+        }
+        public TES4LoadedRecord? TryFindByEDID(string edid)
+        {
+            return TryFindByEDID(edid, false);
+        }
+        public TES4LoadedRecord FindByEDID(string edid)
+        {
+            return TryFindByEDID(edid, true)!;
         }
 
         public TrieIterator FindByEDIDPrefix(string edid)
@@ -79,7 +87,7 @@ namespace Skyblivion.ESReader.TES4
             List<TES4Grup> grups = new List<TES4Grup>();
             foreach (var file in this.files)
             {
-                TES4Grup grup = file.GetGrup(type);
+                TES4Grup? grup = file.GetGrup(type);
                 if (grup != null)
                 {
                     grups.Add(grup);

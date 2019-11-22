@@ -1,3 +1,4 @@
+using Skyblivion.ESReader.Extensions;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -11,13 +12,13 @@ namespace Skyblivion.ESReader.Struct
     public class TrieIterator
     {
         public int Key { get; private set; }
-        private readonly Trie root;
-        private Trie current;
-        private Stack<Trie> stack;
+        private readonly Trie? root;
+        private Trie? current;
+        private Stack<Trie>? stack;
         /*
         * TrieIterator constructor.
         */
-        public TrieIterator(Trie root)
+        public TrieIterator(Trie? root)
         {
             this.root = root;
             if (null != this.root)
@@ -26,7 +27,7 @@ namespace Skyblivion.ESReader.Struct
             }
         }
 
-        public object _current()
+        public object? _current()
         {
             if (null != this.current)
             {
@@ -37,6 +38,7 @@ namespace Skyblivion.ESReader.Struct
 
         public void Next()
         {
+            if (this.current == null) { throw new NullableException(nameof(this.current)); }
             /*
              * Expand the current node to children
              */
@@ -67,6 +69,7 @@ namespace Skyblivion.ESReader.Struct
 
         private void PushNodeForIteration(Trie trie)
         {
+            if (this.stack == null) { throw new NullableException(nameof(this.stack)); }
             /*
              * There can be intermediary nodes that weren"t directly inserted
              * They won"t have a value, so let"s skip them
@@ -92,6 +95,7 @@ namespace Skyblivion.ESReader.Struct
 
         private void PopNodeForIteration()
         {
+            if (this.stack == null) { throw new NullableException(nameof(this.stack)); }
             /*
              * Pop the next node
              */

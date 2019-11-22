@@ -17,7 +17,7 @@ namespace Skyblivion.ESReader.TES4
     {
         public const int GRUP_HEADER_SIZE = 20;
         public int Size { get; private set; }
-        public TES4RecordType Type { get; private set; }
+        public TES4RecordType? Type { get; private set; }
         private readonly List<ITES4Record> records = new List<ITES4Record>();
 
         public IEnumerator<ITES4Record> GetEnumerator()

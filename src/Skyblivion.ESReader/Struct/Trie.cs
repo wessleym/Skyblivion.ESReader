@@ -12,13 +12,13 @@ namespace Skyblivion.ESReader.Struct
     public class Trie
     {
         private Dictionary<string, Trie> trie = new Dictionary<string, Trie>();
-        private TES4LoadedRecord value = null;
+        private TES4LoadedRecord? value = null;
         /*
         * Trie constructor
          *
          *  This is for internal use
         */
-        public Trie(TES4LoadedRecord value = null)
+        public Trie(TES4LoadedRecord? value = null)
         {
             this.value = value;
         }
@@ -87,7 +87,7 @@ namespace Skyblivion.ESReader.Struct
         /*
         * Search the Trie with a string
         */
-        public TES4LoadedRecord Search(string str)
+        public TES4LoadedRecord? Search(string str)
         {
             if (str == "")//WTM:  Change:  In PHP, this was empty(str), which returns true when str = "0"
             {
@@ -139,7 +139,7 @@ namespace Skyblivion.ESReader.Struct
             return new TrieIterator(null);
         }
 
-        public TES4LoadedRecord _value()
+        public TES4LoadedRecord? _value()
         {
             return this.value;
         }
