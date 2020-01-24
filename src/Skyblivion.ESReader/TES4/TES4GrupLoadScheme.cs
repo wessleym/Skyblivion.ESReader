@@ -4,7 +4,7 @@ namespace Skyblivion.ESReader.TES4
 {
     public class TES4GrupLoadScheme
     {
-        private Dictionary<TES4RecordType, TES4RecordLoadScheme> records = new Dictionary<TES4RecordType, TES4RecordLoadScheme>();
+        private readonly Dictionary<TES4RecordType, TES4RecordLoadScheme> records = new Dictionary<TES4RecordType, TES4RecordLoadScheme>();
         public void Add(TES4RecordType type, TES4RecordLoadScheme scheme)
         {
             this.records.Add(type, scheme);

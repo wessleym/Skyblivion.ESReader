@@ -143,7 +143,7 @@ namespace Skyblivion.ESReader.TES4
             WRLD = new TES4RecordType("WRLD"),
             WTHR = new TES4RecordType("WTHR");
 
-        private static TES4RecordType[] all = new TES4RecordType[]
+        private static readonly TES4RecordType[] all = new TES4RecordType[]
         {
             ACHR,
             ACRE,

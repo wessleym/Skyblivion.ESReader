@@ -123,7 +123,7 @@ namespace Skyblivion.ESReader.TES4
             {
                 string subrecordType = TES4File.ISO_8859_1.Value.GetString(fileData, i, 4);
                 int subrecordSize = PHPFunction.UnpackV(fileData.Skip(i + 4).Take(2).ToArray());
-                if (scheme.shouldLoad(subrecordType))
+                if (scheme.ShouldLoad(subrecordType))
                 {
                     byte[] subrecordData = fileData.Skip(i+6).Take(subrecordSize).ToArray();
                     this.data.AddNewListIfNotContainsKeyAndAddValueToList(subrecordType, subrecordData);

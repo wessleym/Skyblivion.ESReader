@@ -11,7 +11,7 @@ namespace Skyblivion.ESReader.Struct
      */
     public class Trie
     {
-        private Dictionary<string, Trie> trie = new Dictionary<string, Trie>();
+        private readonly Dictionary<string, Trie> trie = new Dictionary<string, Trie>();
         private TES4LoadedRecord? value = null;
         /*
         * Trie constructor

@@ -19,8 +19,9 @@ namespace Skyblivion.ESReader
 
         public void Load()
         {
-            string filepath = Path.Combine(this.path, this.name);
-            //h = fopen(filepath, "rb");//WTM:  Change:  Commented since unused
+            //WTM:  Change:  Commented since unused
+            //string filepath = Path.Combine(this.path, this.name);
+            //h = fopen(filepath, "rb");
         }
     }
 }

@@ -69,9 +69,9 @@ namespace Skyblivion.ESReader.TES4
                     int grupSize = PHPFunction.UnpackV(headerBytes.Skip(4).Take(4).ToArray());
                     TES4RecordType grupType = TES4RecordType.First(headerString.Substring(8, 4));
                     TES4Grup grup = new TES4Grup();
-                    if (scheme.shouldLoad(grupType))
+                    if (scheme.ShouldLoad(grupType))
                     {
-                        TES4GrupLoadScheme? rules = scheme.getRulesFor(grupType);
+                        TES4GrupLoadScheme? rules = scheme.GetRulesFor(grupType);
                         if (rules == null) { throw new InvalidOperationException(nameof(rules) + " was null for " + nameof(grupType) + " " + grupType.Name + "."); }
                         foreach (var loadedRecord in grup.Load(contents, this, rules, true))
                         {

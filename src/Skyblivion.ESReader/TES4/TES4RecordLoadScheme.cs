@@ -4,7 +4,7 @@ namespace Skyblivion.ESReader.TES4
 {
     public class TES4RecordLoadScheme
     {
-        private Dictionary<string, bool> subrecords;
+        private readonly Dictionary<string, bool> subrecords;
         public TES4RecordLoadScheme(string[] subrecords)
         {
             this.subrecords = new Dictionary<string, bool>();
@@ -14,7 +14,7 @@ namespace Skyblivion.ESReader.TES4
             }
         }
 
-        public bool shouldLoad(string subrecord)
+        public bool ShouldLoad(string subrecord)
         {
             return this.subrecords.ContainsKey(subrecord);
         }
