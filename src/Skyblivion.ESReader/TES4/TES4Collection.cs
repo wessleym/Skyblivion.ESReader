@@ -1,7 +1,9 @@
 using Skyblivion.ESReader.Exceptions;
 using Skyblivion.ESReader.Extensions.IDictionaryExtensions;
 using Skyblivion.ESReader.Struct;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Skyblivion.ESReader.TES4
 {
@@ -9,7 +11,8 @@ namespace Skyblivion.ESReader.TES4
     {
         private readonly string path;
         private readonly Dictionary<int, TES4LoadedRecord> records = new Dictionary<int, TES4LoadedRecord>();
-        private readonly Trie edidIndex;
+        private readonly Trie<TES4LoadedRecord> edidIndex;
+        private readonly Trie<List<TES4LoadedRecord>> scriIndex;
         private readonly List<TES4File> files = new List<TES4File>();
         private readonly Dictionary<string, TES4File> indexedFiles = new Dictionary<string, TES4File>();
         private readonly Dictionary<string, Dictionary<int, int>> expandTables = new Dictionary<string, Dictionary<int, int>>();
@@ -19,7 +22,8 @@ namespace Skyblivion.ESReader.TES4
         public TES4Collection(string path)
         {
             this.path = path;
-            this.edidIndex = new Trie();
+            this.edidIndex = new Trie<TES4LoadedRecord>();
+            this.scriIndex = new Trie<List<TES4LoadedRecord>>();
         }
 
         public void Add(string name)
@@ -40,26 +44,44 @@ namespace Skyblivion.ESReader.TES4
                     int formid = loadedRecord.GetFormId();
                     //TODO resolve conflicts
                     this.records.Add(formid, loadedRecord);
-                    string? edid = loadedRecord.GetSubrecordTrimLower("EDID");
+                    string? edid = loadedRecord.GetSubrecordTrimLowerNullable("EDID");
                     if (edid != null)
                     {
                         this.edidIndex.Add(edid, loadedRecord);
+                    }
+                    Nullable<int> scri = loadedRecord.GetSubrecordAsFormidNullable("SCRI");
+                    if (scri != null)
+                    {
+                        string scriString = scri.ToString();
+                        List<TES4LoadedRecord>? records = this.scriIndex.Search(scriString);
+                        if (records == null)
+                        {
+                            records = new List<TES4LoadedRecord>();
+                            this.scriIndex.Add(scri.ToString(), records);
+                        }
+                        records.Add(loadedRecord);
                     }
                 }
             }
         }
 
-        public TES4LoadedRecord FindByFormid(int formid)
+        public TES4LoadedRecord GetRecordByFormID(int formID)
         {
             TES4LoadedRecord record;
-            if (this.records.TryGetValue(formid, out record))
+            if (this.records.TryGetValue(formID, out record))
             {
                 return record;
             }
-            throw new RecordNotFoundException("Form " + formid.ToString() + " not found.");
+            throw new RecordNotFoundException("A record with form ID " + formID.ToString() + " was not found.");
         }
 
-        private TES4LoadedRecord? TryFindByEDID(string edid, bool throwNotFoundException)
+        public TES4LoadedRecord[] GetRecordsBySCRI(int formID)
+        {
+            List<TES4LoadedRecord>? list = scriIndex.Search(formID.ToString());
+            return list != null ? list.ToArray() : new TES4LoadedRecord[] { };
+        }
+
+        private TES4LoadedRecord? GetRecordByEDID(string edid, bool throwNotFoundException)
         {
             string lowerEdid = edid.ToLower();
             TES4LoadedRecord? record = this.edidIndex.Search(lowerEdid);
@@ -67,16 +89,16 @@ namespace Skyblivion.ESReader.TES4
             if (throwNotFoundException) { throw new RecordNotFoundException("EDID " + edid + " not found."); }
             return null;
         }
-        public TES4LoadedRecord? TryFindByEDID(string edid)
+        public TES4LoadedRecord? TryGetRecordByEDID(string edid)
         {
-            return TryFindByEDID(edid, false);
+            return GetRecordByEDID(edid, false);
         }
-        public TES4LoadedRecord FindByEDID(string edid)
+        public TES4LoadedRecord GetRecordByEDID(string edid)
         {
-            return TryFindByEDID(edid, true)!;
+            return GetRecordByEDID(edid, true)!;
         }
 
-        public TrieIterator FindByEDIDPrefix(string edid)
+        public TrieIterator<TES4LoadedRecord> FindByEDIDPrefix(string edid)
         {
             string lowerEdid = edid.ToLower();
             return this.edidIndex.SearchPrefix(lowerEdid);

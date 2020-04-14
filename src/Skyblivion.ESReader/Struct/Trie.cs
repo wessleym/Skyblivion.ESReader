@@ -9,16 +9,16 @@ namespace Skyblivion.ESReader.Struct
      * Class Trie
      * Based off implementation of https://github.com/fran6co/phptrie/
      */
-    public class Trie
+    public class Trie<T> where T : class
     {
-        private readonly Dictionary<string, Trie> trie = new Dictionary<string, Trie>();
-        private TES4LoadedRecord? value = null;
+        private readonly Dictionary<string, Trie<T>> trie = new Dictionary<string, Trie<T>>();
+        private T? value = null;
         /*
         * Trie constructor
          *
          *  This is for internal use
         */
-        public Trie(TES4LoadedRecord? value = null)
+        public Trie(T? value = null)
         {
             this.value = value;
         }
@@ -30,7 +30,7 @@ namespace Skyblivion.ESReader.Struct
          *  mixed The value
          *  Overwrite existing value
         */
-        public void Add(string str, TES4LoadedRecord value, bool overWrite = true)
+        public void Add(string str, T value, bool overWrite = true)
         {
             if (str == "")
             {
@@ -50,7 +50,7 @@ namespace Skyblivion.ESReader.Struct
                 { //Split
                     if (i >= headLength)
                     {
-                        Trie equalTrie = new Trie(value);
+                        Trie<T> equalTrie = new Trie<T>(value);
                         this.trie.Add(equalPrefix, equalTrie);
                         equalTrie.trie.Add(prefix.Substring(i), trie);
                         this.trie.Remove(prefix);
@@ -60,10 +60,10 @@ namespace Skyblivion.ESReader.Struct
                     {
                         if (i > 0)
                         {
-                            Trie equalTrie = new Trie();
+                            Trie<T> equalTrie = new Trie<T>();
                             this.trie.Add(equalPrefix, equalTrie);
                             equalTrie.trie.Add(prefix.Substring(i), trie);
-                            equalTrie.trie.Add(str.Substring(i), new Trie(value));
+                            equalTrie.trie.Add(str.Substring(i), new Trie<T>(value));
                             this.trie.Remove(prefix);
                             return;
                         }
@@ -81,13 +81,13 @@ namespace Skyblivion.ESReader.Struct
                     return;
                 }
             }
-            this.trie.Add(str, new Trie(value));
+            this.trie.Add(str, new Trie<T>(value));
         }
 
         /*
         * Search the Trie with a string
         */
-        public TES4LoadedRecord? Search(string str)
+        public T? Search(string str)
         {
             if (str == "")//WTM:  Change:  In PHP, this was empty(str), which returns true when str = "0"
             {
@@ -105,9 +105,9 @@ namespace Skyblivion.ESReader.Struct
             return null;
         }
 
-        public TrieIterator SearchPrefix(string str)
+        public TrieIterator<T> SearchPrefix(string str)
         {
-            if (str == "") { return new TrieIterator(this); }
+            if (str == "") { return new TrieIterator<T>(this); }
             int stringLength = str.Length;
             foreach (var kvp in this.trie)
             {
@@ -136,15 +136,15 @@ namespace Skyblivion.ESReader.Struct
                     return trie.SearchPrefix(str.Substring(prefixLength));
                 }
             }
-            return new TrieIterator(null);
+            return new TrieIterator<T>(null);
         }
 
-        public TES4LoadedRecord? _value()
+        public T? _value()
         {
             return this.value;
         }
 
-        public Dictionary<string, Trie> Subnodes()
+        public Dictionary<string, Trie<T>> Subnodes()
         {
             return this.trie;
         }

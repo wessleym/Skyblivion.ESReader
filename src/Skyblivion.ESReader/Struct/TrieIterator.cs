@@ -9,16 +9,16 @@ namespace Skyblivion.ESReader.Struct
      * Class TrieIterator
      * @package Skyblivion\ESReader\Struct
      */
-    public class TrieIterator
+    public class TrieIterator<T> where T : class
     {
         public int Key { get; private set; }
-        private readonly Trie? root;
-        private Trie? current;
-        private Stack<Trie>? stack;
+        private readonly Trie<T>? root;
+        private Trie<T>? current;
+        private Stack<Trie<T>>? stack;
         /*
         * TrieIterator constructor.
         */
-        public TrieIterator(Trie? root)
+        public TrieIterator(Trie<T>? root)
         {
             this.root = root;
             if (null != this.root)
@@ -59,7 +59,7 @@ namespace Skyblivion.ESReader.Struct
         public void Rewind()
         {
             this.Key = 0;
-            this.stack = new Stack<Trie>();
+            this.stack = new Stack<Trie<T>>();
             if (null != this.root)
             {
                 this.PushNodeForIteration(this.root);
@@ -67,18 +67,18 @@ namespace Skyblivion.ESReader.Struct
             }
         }
 
-        private void PushNodeForIteration(Trie trie)
+        private void PushNodeForIteration(Trie<T> trie)
         {
             if (this.stack == null) { throw new NullableException(nameof(this.stack)); }
             /*
              * There can be intermediary nodes that weren"t directly inserted
              * They won"t have a value, so let"s skip them
              */
-            Stack<Trie[]> nodesToTravel = new Stack<Trie[]>();
-            nodesToTravel.Push(new Trie[] { trie });
+            Stack<Trie<T>[]> nodesToTravel = new Stack<Trie<T>[]>();
+            nodesToTravel.Push(new Trie<T>[] { trie });
             while (nodesToTravel.Any())
             {
-                Trie[] currentNodes = nodesToTravel.Pop();
+                Trie<T>[] currentNodes = nodesToTravel.Pop();
                 foreach (var currentNode in currentNodes)
                 {
                     if (null != currentNode._value())

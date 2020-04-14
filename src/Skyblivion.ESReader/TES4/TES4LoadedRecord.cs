@@ -59,7 +59,7 @@ namespace Skyblivion.ESReader.TES4
             return GetSubrecordString(subrecord);
         }
 
-        public string? GetSubrecordTrim(string type)
+        public string? GetSubrecordTrimNullable(string type)
         {
             byte[]? subrecord = GetSubrecord(type);
             if (subrecord == null) { return null; }
@@ -68,9 +68,16 @@ namespace Skyblivion.ESReader.TES4
             return trimmed;
         }
 
-        public string? GetSubrecordTrimLower(string type)
+        public string GetSubrecordTrim(string type)
         {
-            string? subrecord = GetSubrecordTrim(type);
+            string? trimmed = GetSubrecordTrimNullable(type);
+            if (trimmed == null) { throw new InvalidOperationException(nameof(type) + " " + type + " resulted in null."); }
+            return trimmed;
+        }
+
+        public string? GetSubrecordTrimLowerNullable(string type)
+        {
+            string? subrecord = GetSubrecordTrimNullable(type);
             if (subrecord == null) { return null; }
             return subrecord.ToLower();
         }

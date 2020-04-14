@@ -11,8 +11,9 @@ namespace Skyblivion.ESReader.TES4
         Nullable<int> GetSubrecordAsFormidNullable(string type);
         byte[]? GetSubrecord(string type);
         string GetSubrecordString(string type);
-        string? GetSubrecordTrim(string type);
-        string? GetSubrecordTrimLower(string type);
+        string? GetSubrecordTrimNullable(string type);
+        string GetSubrecordTrim(string type);
+        string? GetSubrecordTrimLowerNullable(string type);
         List<byte[]> GetSubrecords(string type);
     }
 }
