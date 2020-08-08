@@ -46,7 +46,6 @@ namespace Skyblivion.ESReader.PHP
 
         public static string UCWords(string s)
         {
-            if (s == null) { throw new ArgumentNullException(nameof(s)); }
             if (s.Contains(" "))
             {
                 throw new InvalidOperationException("This implementation of UCWords is only meant to make the first character uppercase, not process words like the real PHP version of UCWords");
