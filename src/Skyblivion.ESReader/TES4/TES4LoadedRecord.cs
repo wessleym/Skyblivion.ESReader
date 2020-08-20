@@ -48,7 +48,7 @@ namespace Skyblivion.ESReader.TES4
 
         public byte[]? GetSubrecord(string type)
         {
-            byte[]? subrecord = this.data.Where(d => d.Key == type).Select(d=>d.Value).FirstOrDefault();
+            byte[]? subrecord = this.data.Where(d => d.Key == type).Select(d => d.Value).FirstOrDefault();
             if (subrecord != null) { return subrecord; }
             return null;
         }
@@ -170,7 +170,7 @@ namespace Skyblivion.ESReader.TES4
                 int subrecordSize = PHPFunction.UnpackV(fileData.Skip(i + 4).Take(2).ToArray());
                 if (scheme.ShouldLoad(subrecordType))
                 {
-                    byte[] subrecordData = fileData.Skip(i+6).Take(subrecordSize).ToArray();
+                    byte[] subrecordData = fileData.Skip(i + 6).Take(subrecordSize).ToArray();
                     this.data.Add(new KeyValuePair<string, byte[]>(subrecordType, subrecordData));
                 }
 
