@@ -34,7 +34,7 @@ namespace Skyblivion.ESReader.TES4
                   {
                       tes4record = this.FetchTES4(file);
                   }
-                  return tes4record.GetSubrecordsStrings("MAST");
+                  return tes4record.GetSubrecordsStrings("MAST").ToArray();
               });
         }
 

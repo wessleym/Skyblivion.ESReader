@@ -14,6 +14,6 @@ namespace Skyblivion.ESReader.TES4
         string? GetSubrecordTrimNullable(string type);
         string GetSubrecordTrim(string type);
         string? GetSubrecordTrimLowerNullable(string type);
-        List<byte[]> GetSubrecords(string type);
+        IEnumerable<byte[]> GetSubrecords(string type);
     }
 }

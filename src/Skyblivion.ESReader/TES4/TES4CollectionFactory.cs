@@ -38,7 +38,7 @@
             grupScheme.Add(TES4RecordType.MGEF, new TES4RecordLoadScheme(new string[] { "EDID", "SCRI" }));
             fileScheme.Add(TES4RecordType.MGEF, grupScheme);
             grupScheme = new TES4GrupLoadScheme();
-            grupScheme.Add(TES4RecordType.SCPT, new TES4RecordLoadScheme(new string[] { "EDID", "SCRI", "SCHR" }));
+            grupScheme.Add(TES4RecordType.SCPT, new TES4RecordLoadScheme(new string[] { "EDID", "SCRI", "SCHR", "SCRO" }));//WTM:  Change:  Added SCRO for use by ESMAnalyzer.GetTypesFromSCRO.
             fileScheme.Add(TES4RecordType.SCPT, grupScheme);
             grupScheme = new TES4GrupLoadScheme();
             grupScheme.Add(TES4RecordType.LTEX, new TES4RecordLoadScheme(new string[] { "EDID", "SCRI" }));
@@ -140,7 +140,7 @@
             grupScheme.Add(TES4RecordType.REGN, new TES4RecordLoadScheme(new string[] { "EDID", "SCRI" }));
             fileScheme.Add(TES4RecordType.REGN, grupScheme);
             grupScheme = new TES4GrupLoadScheme();
-            grupScheme.Add(TES4RecordType.CELL, new TES4RecordLoadScheme(new string[] { "EDID", "SCRI", "FULL" }));//WTM:  Change:  Added "Full" for use from GetInCellFactory.cs.
+            grupScheme.Add(TES4RecordType.CELL, new TES4RecordLoadScheme(new string[] { "EDID", "SCRI", "FULL" }));//WTM:  Change:  Added FULL for use from GetInCellFactory.cs.
             grupScheme.Add(TES4RecordType.REFR, new TES4RecordLoadScheme(new string[] { "EDID", "NAME" }));
             grupScheme.Add(TES4RecordType.ACHR, new TES4RecordLoadScheme(new string[] { "EDID", "NAME" }));
             grupScheme.Add(TES4RecordType.ACRE, new TES4RecordLoadScheme(new string[] { "EDID", "NAME" }));
@@ -154,9 +154,10 @@
             fileScheme.Add(TES4RecordType.WRLD, grupScheme);
             grupScheme = new TES4GrupLoadScheme();
             grupScheme.Add(TES4RecordType.DIAL, new TES4RecordLoadScheme(new string[] { "EDID", "SCRI" }));
+            grupScheme.Add(TES4RecordType.INFO, new TES4RecordLoadScheme(new string[] { "SCRO" }));//WTM:  Change:  Added INFO line for use by ESMAnalyzer.GetTypesFromSCRO.
             fileScheme.Add(TES4RecordType.DIAL, grupScheme);
             grupScheme = new TES4GrupLoadScheme();
-            grupScheme.Add(TES4RecordType.QUST, new TES4RecordLoadScheme(new string[] { "EDID", "SCRI" }));
+            grupScheme.Add(TES4RecordType.QUST, new TES4RecordLoadScheme(new string[] { "EDID", "SCRI", "INDX", "SCRO" }));//WTM:  Change:  Added INDX and SCRO for use by ESMAnalyzer.GetTypesFromSCRO.
             fileScheme.Add(TES4RecordType.QUST, grupScheme);
             grupScheme = new TES4GrupLoadScheme();
             grupScheme.Add(TES4RecordType.IDLE, new TES4RecordLoadScheme(new string[] { "EDID", "SCRI" }));

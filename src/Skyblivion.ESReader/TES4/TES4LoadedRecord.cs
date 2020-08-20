@@ -17,7 +17,7 @@ namespace Skyblivion.ESReader.TES4
         private readonly int flags;
         private int size;
         public TES4RecordType RecordType { get; private set; }
-        private readonly Dictionary<string, List<byte[]>> data = new Dictionary<string, List<byte[]>>();
+        private readonly List<KeyValuePair<string, byte[]>> data = new List<KeyValuePair<string, byte[]>>();
         private readonly Dictionary<string, int> dataAsFormidCache = new Dictionary<string, int>();
         /*
         * TES4LoadedRecord constructor.
@@ -31,20 +31,25 @@ namespace Skyblivion.ESReader.TES4
             this.flags = flags;
         }
 
-        public List<byte[]> GetSubrecords(string type)
+        public IEnumerable<byte[]> GetSubrecords(string type)
         {
-            return this.data.GetWithFallback(type, () => new List<byte[]>());
+            return this.data.Where(d => d.Key == type).Select(d => d.Value);
         }
 
-        public string[] GetSubrecordsStrings(string type)
+        public IEnumerable<KeyValuePair<string, byte[]>> GetSubrecords(IList<string> types)
         {
-            return GetSubrecords(type).Select(r=>GetSubrecordString(r)).ToArray();
+            return this.data.Where(d => types.Contains(d.Key));
+        }
+
+        public IEnumerable<string> GetSubrecordsStrings(string type)
+        {
+            return GetSubrecords(type).Select(r => GetSubrecordString(r));
         }
 
         public byte[]? GetSubrecord(string type)
         {
-            List<byte[]> list;
-            if (this.data.TryGetValue(type, out list) && this.data[type].Any()) { return list[0]; }
+            byte[]? subrecord = this.data.Where(d => d.Key == type).Select(d=>d.Value).FirstOrDefault();
+            if (subrecord != null) { return subrecord; }
             return null;
         }
 
@@ -109,6 +114,39 @@ namespace Skyblivion.ESReader.TES4
             return this.expandedFormid.Value;
         }
 
+        public IEnumerable<byte[]> GetSCRORecords(Nullable<int> index)
+        {
+            const string indx = "INDX", scro = "SCRO";
+            List<string> subrecordTypes = new List<string>();
+            if (index != null) { subrecordTypes.Add(indx); }
+            subrecordTypes.Add(scro);
+            bool indexFound = false;
+            foreach (var record in GetSubrecords(subrecordTypes))
+            {
+                if (index != null)
+                {
+                    bool isIndexRecord = record.Key == indx;
+                    if (isIndexRecord)
+                    {
+                        if (!indexFound)
+                        {
+                            if (record.Value[0] == index) { indexFound = true; }
+                        }
+                        else
+                        {
+                            if (record.Value[0] != index) { yield break; }
+                        }
+                    }
+                    if (!indexFound)
+                    {
+                        if (isIndexRecord && record.Value[0] == index) { indexFound = true; }
+                        else { continue; }
+                    }
+                }
+                if (record.Key == scro) { yield return record.Value; }
+            }
+        }
+
         public void Load(Stream file, TES4RecordLoadScheme scheme)
         {
             if (this.size == 0)
@@ -133,7 +171,7 @@ namespace Skyblivion.ESReader.TES4
                 if (scheme.ShouldLoad(subrecordType))
                 {
                     byte[] subrecordData = fileData.Skip(i+6).Take(subrecordSize).ToArray();
-                    this.data.AddNewListIfNotContainsKeyAndAddValueToList(subrecordType, subrecordData);
+                    this.data.Add(new KeyValuePair<string, byte[]>(subrecordType, subrecordData));
                 }
 
                 i += (subrecordSize + 6);

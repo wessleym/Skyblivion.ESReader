@@ -3,7 +3,6 @@ using Skyblivion.ESReader.Extensions.IDictionaryExtensions;
 using Skyblivion.ESReader.Struct;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Skyblivion.ESReader.TES4
 {
@@ -12,6 +11,7 @@ namespace Skyblivion.ESReader.TES4
         private readonly string path;
         private readonly Dictionary<int, TES4LoadedRecord> records = new Dictionary<int, TES4LoadedRecord>();
         private readonly Trie<TES4LoadedRecord> edidIndex;
+        private readonly Dictionary<int, List<int>> nameFormIDToFormIDIndex;//WTM:  Change:  Added
         private readonly Trie<List<TES4LoadedRecord>> scriIndex;
         private readonly List<TES4File> files = new List<TES4File>();
         private readonly Dictionary<string, TES4File> indexedFiles = new Dictionary<string, TES4File>();
@@ -23,6 +23,7 @@ namespace Skyblivion.ESReader.TES4
         {
             this.path = path;
             this.edidIndex = new Trie<TES4LoadedRecord>();
+            this.nameFormIDToFormIDIndex = new Dictionary<int, List<int>>();
             this.scriIndex = new Trie<List<TES4LoadedRecord>>();
         }
 
@@ -49,6 +50,11 @@ namespace Skyblivion.ESReader.TES4
                     {
                         this.edidIndex.Add(edid, loadedRecord);
                     }
+                    Nullable<int> nameFormID = loadedRecord.GetSubrecordAsFormidNullable("NAME");
+                    if (nameFormID != null)
+                    {
+                        this.nameFormIDToFormIDIndex.AddNewListIfNotContainsKeyAndAddValueToList(nameFormID.Value, formid);
+                    }
                     Nullable<int> scri = loadedRecord.GetSubrecordAsFormidNullable("SCRI");
                     if (scri != null)
                     {
@@ -73,6 +79,20 @@ namespace Skyblivion.ESReader.TES4
                 return record;
             }
             throw new RecordNotFoundException("A record with form ID " + formID.ToString() + " was not found.");
+        }
+
+        public string? GetEDIDByFormIDNullable(int formID)
+        {
+            TES4LoadedRecord record = GetRecordByFormID(formID);
+            string? edid = record.GetSubrecordTrimNullable("EDID");
+            return edid;
+        }
+
+        public string GetEDIDByFormID(int formID)
+        {
+            string? edid = GetEDIDByFormIDNullable(formID);
+            if (!string.IsNullOrWhiteSpace(edid)) { return edid!; }
+            throw new InvalidOperationException(nameof(edid) + " was invalid:  " + edid);
         }
 
         public TES4LoadedRecord[] GetRecordsBySCRI(int formID)
@@ -102,6 +122,14 @@ namespace Skyblivion.ESReader.TES4
         {
             string lowerEdid = edid.ToLower();
             return this.edidIndex.SearchPrefix(lowerEdid);
+        }
+
+        public List<int>? TryGetFormIDsByName(int nameFormID)
+        {
+            List<int> formIDs;
+            this.nameFormIDToFormIDIndex.TryGetValue(nameFormID, out formIDs);
+            //Some values, like ArenaMouth "Arena Mouth" [NPC_:00046653], are sent into this method but return null since they are never used in NAME records.
+            return formIDs;
         }
 
         public List<TES4Grup> GetGrup(TES4RecordType type)
