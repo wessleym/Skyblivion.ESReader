@@ -1,5 +1,5 @@
 using Skyblivion.ESReader.Exceptions;
-using Skyblivion.ESReader.Extensions.IDictionaryExtensions;
+using Skyblivion.ESReader.Extensions;
 using Skyblivion.ESReader.Struct;
 using System;
 using System.Collections.Generic;

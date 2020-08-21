@@ -1,5 +1,5 @@
 using Skyblivion.ESReader.Exceptions;
-using Skyblivion.ESReader.Extensions.StreamExtensions;
+using Skyblivion.ESReader.Extensions;
 using Skyblivion.ESReader.PHP;
 using System.Collections;
 using System.Collections.Generic;

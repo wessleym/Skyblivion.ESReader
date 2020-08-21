@@ -1,4 +1,4 @@
-using Skyblivion.ESReader.Extensions.IDictionaryExtensions;
+using Skyblivion.ESReader.Extensions;
 using System.Collections.Generic;
 
 namespace Skyblivion.ESReader.TES4

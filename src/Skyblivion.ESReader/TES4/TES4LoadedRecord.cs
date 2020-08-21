@@ -1,5 +1,4 @@
-using Skyblivion.ESReader.Extensions.IDictionaryExtensions;
-using Skyblivion.ESReader.Extensions.StreamExtensions;
+using Skyblivion.ESReader.Extensions;
 using Skyblivion.ESReader.PHP;
 using System;
 using System.Collections.Generic;

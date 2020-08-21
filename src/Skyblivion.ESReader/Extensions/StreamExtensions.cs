@@ -1,6 +1,6 @@
 ﻿using System.IO;
 
-namespace Skyblivion.ESReader.Extensions.StreamExtensions
+namespace Skyblivion.ESReader.Extensions
 {
     public static class StreamExtensions
     {
