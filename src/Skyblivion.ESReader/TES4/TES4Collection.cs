@@ -2,11 +2,12 @@ using Skyblivion.ESReader.Exceptions;
 using Skyblivion.ESReader.Extensions;
 using Skyblivion.ESReader.Struct;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 
 namespace Skyblivion.ESReader.TES4
 {
-    public class TES4Collection
+    public class TES4Collection : IEnumerable<TES4LoadedRecord>
     {
         private readonly string path;
         private readonly Dictionary<int, TES4LoadedRecord> records = new Dictionary<int, TES4LoadedRecord>();
@@ -40,7 +41,7 @@ namespace Skyblivion.ESReader.TES4
                 foreach (TES4LoadedRecord loadedRecord in file.Load(scheme))
                 {
                     //no FORMID class encapsulation due to memory budgeting ;)
-                    int formid = loadedRecord.GetFormId();
+                    int formid = loadedRecord.FormID;
                     //TODO resolve conflicts
                     this.records.Add(formid, loadedRecord);
                     string? edid = loadedRecord.GetSubrecordTrimLowerNullable("EDID");
@@ -77,7 +78,7 @@ namespace Skyblivion.ESReader.TES4
         public string? GetEDIDByFormIDNullable(int formID)
         {
             TES4LoadedRecord record = GetRecordByFormID(formID);
-            string? edid = record.GetSubrecordTrimNullable("EDID");
+            string? edid = record.TryGetEditorID();
             return edid;
         }
 
@@ -195,6 +196,16 @@ namespace Skyblivion.ESReader.TES4
                     AddToExpandTables(file.Name, masterId, expandedIndex);
                 }
             }
+        }
+
+        public IEnumerator<TES4LoadedRecord> GetEnumerator()
+        {
+            return records.Values.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
         }
     }
 }

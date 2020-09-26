@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -11,12 +12,10 @@ namespace Skyblivion.ESReader.PHP
     {
         public static string MD5(string input)
         {
-            // Use input string to calculate MD5 hash
             using (System.Security.Cryptography.MD5 md5 = System.Security.Cryptography.MD5.Create())
             {
                 byte[] inputBytes = Encoding.ASCII.GetBytes(input);
                 byte[] hashBytes = md5.ComputeHash(inputBytes);
-                // Convert the byte array to hexadecimal string
                 return string.Join("", hashBytes.Select(b => b.ToString("X2"))).ToLower();
             }
         }
@@ -72,12 +71,12 @@ namespace Skyblivion.ESReader.PHP
             }
         }
 
-        public static int UnpackV(byte[] bytes)
+        public static int UnpackV(IList<byte> bytes)
         {
-            if (bytes.Length != 2 && bytes.Length != 4) { throw new ArgumentException("Length did not equal 2 or 4.", nameof(bytes)); }
+            if (bytes.Count != 2 && bytes.Count != 4) { throw new ArgumentException("Length did not equal 2 or 4.", nameof(bytes)); }
             const int baseNum = 256;
             int sum = 0;
-            for (int i = 0; i < bytes.Length; i++)
+            for (int i = 0; i < bytes.Count; i++)
             {
                 int byteInt = (int)bytes[i];
                 sum += byteInt * (int)Math.Pow(baseNum, i);

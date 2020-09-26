@@ -11,11 +11,12 @@ namespace Skyblivion.ESReader.TES4
     {
         public const int RECORD_HEADER_SIZE = 20;
         private readonly TES4File placedFile;
-        private readonly int formid;
-        private Nullable<int> expandedFormid;
+        private readonly int formIDPrivate;
         private readonly int flags;
         private int size;
         public TES4RecordType RecordType { get; private set; }
+        private readonly Lazy<int> formIDLazy;
+        public int FormID => formIDLazy.Value;
         private readonly List<KeyValuePair<string, byte[]>> data = new List<KeyValuePair<string, byte[]>>();
         private readonly Dictionary<string, int> dataAsFormidCache = new Dictionary<string, int>();
         /*
@@ -25,9 +26,10 @@ namespace Skyblivion.ESReader.TES4
         {
             this.placedFile = placedFile;
             this.RecordType = type;
-            this.formid = formid;
+            this.formIDPrivate = formid;
             this.size = size;
             this.flags = flags;
+            formIDLazy = new Lazy<int>(() => this.placedFile.Expand(this.formIDPrivate));
         }
 
         public IEnumerable<byte[]> GetSubrecords(string type)
@@ -92,7 +94,7 @@ namespace Skyblivion.ESReader.TES4
             if (this.dataAsFormidCache.TryGetValue(type, out value)) { return value; }
             byte[]? subrecord = this.GetSubrecord(type);
             if (subrecord == null || subrecord.Length < 4) { return null; }
-            value = this.placedFile.Expand(PHPFunction.UnpackV(subrecord.Take(4).ToArray()));
+            value = ExpandBytesIntoFormID(subrecord.Take(4).ToArray());
             this.dataAsFormidCache.Add(type, value);
             return value;
         }
@@ -103,14 +105,21 @@ namespace Skyblivion.ESReader.TES4
             throw new InvalidOperationException(nameof(formid) + " was null for " + nameof(type) + " " + type + ".");
         }
 
-        public int GetFormId()
+        public int ExpandBytesIntoFormID(IList<byte> bytes)
         {
-            if (this.expandedFormid == null)
-            {
-                this.expandedFormid = this.placedFile.Expand(this.formid);
-            }
+            return this.placedFile.Expand(PHPFunction.UnpackV(bytes));
+        }
 
-            return this.expandedFormid.Value;
+        public string? TryGetEditorID()
+        {
+            return GetSubrecordTrimNullable("EDID");
+        }
+
+        public string GetEditorID()
+        {
+            string? editorID = TryGetEditorID();
+            if (editorID != null) { return editorID; }
+            throw new InvalidOperationException(nameof(editorID) + " was null.");
         }
 
         public IEnumerable<byte[]> GetSCRORecords(Nullable<int> index)

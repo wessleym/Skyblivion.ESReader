@@ -154,7 +154,7 @@
             fileScheme.Add(TES4RecordType.WRLD, grupScheme);
             grupScheme = new TES4GrupLoadScheme();
             grupScheme.Add(TES4RecordType.DIAL, new TES4RecordLoadScheme(new string[] { "EDID", "SCRI" }));
-            grupScheme.Add(TES4RecordType.INFO, new TES4RecordLoadScheme(new string[] { "SCRO" }));//WTM:  Change:  Added INFO line for use by ESMAnalyzer.GetTypesFromSCRO.
+            grupScheme.Add(TES4RecordType.INFO, new TES4RecordLoadScheme(new string[] { "NAME", "SCRO" }));//WTM:  Change:  Added INFO line and SCRO argument for use by ESMAnalyzer.GetTypesFromSCRO.  Added NAME argument for use by TranspileChunkJob.GenerateINFOAddTopicScripts.
             fileScheme.Add(TES4RecordType.DIAL, grupScheme);
             grupScheme = new TES4GrupLoadScheme();
             grupScheme.Add(TES4RecordType.QUST, new TES4RecordLoadScheme(new string[] { "EDID", "SCRI", "INDX", "SCRO" }));//WTM:  Change:  Added INDX and SCRO for use by ESMAnalyzer.GetTypesFromSCRO.
