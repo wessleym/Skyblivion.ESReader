@@ -10,20 +10,24 @@ namespace Skyblivion.ESReader.TES4
     public class TES4Collection : IEnumerable<TES4LoadedRecord>
     {
         private readonly string path;
-        private readonly Dictionary<int, TES4LoadedRecord> records = new Dictionary<int, TES4LoadedRecord>();
+        private readonly Dictionary<int, TES4LoadedRecord> records;
         private readonly Trie<TES4LoadedRecord> edidIndex;
-        private readonly Trie<List<TES4LoadedRecord>> scriIndex;
-        private readonly List<TES4File> files = new List<TES4File>();
-        private readonly Dictionary<string, TES4File> indexedFiles = new Dictionary<string, TES4File>();
-        private readonly Dictionary<string, Dictionary<int, int>> expandTables = new Dictionary<string, Dictionary<int, int>>();
+        private readonly Dictionary<int, List<TES4LoadedRecord>> scriIndex;
+        private readonly List<TES4File> files;
+        private readonly Dictionary<string, TES4File> indexedFiles;
+        private readonly Dictionary<string, Dictionary<int, int>> expandTables;
         /*
         * TES4Collection constructor.
         */
         public TES4Collection(string path)
         {
             this.path = path;
+            this.records = new Dictionary<int, TES4LoadedRecord>();
             this.edidIndex = new Trie<TES4LoadedRecord>();
-            this.scriIndex = new Trie<List<TES4LoadedRecord>>();
+            this.scriIndex = new Dictionary<int, List<TES4LoadedRecord>>();
+            this.files = new List<TES4File>();
+            this.indexedFiles = new Dictionary<string, TES4File>();
+            this.expandTables = new Dictionary<string, Dictionary<int, int>>();
         }
 
         public void Add(string name)
@@ -52,14 +56,8 @@ namespace Skyblivion.ESReader.TES4
                     Nullable<int> scri = loadedRecord.GetSubrecordAsFormidNullable("SCRI");
                     if (scri != null)
                     {
-                        string scriString = scri.ToString();
-                        List<TES4LoadedRecord>? records = this.scriIndex.Search(scriString);
-                        if (records == null)
-                        {
-                            records = new List<TES4LoadedRecord>();
-                            this.scriIndex.Add(scri.ToString(), records);
-                        }
-                        records.Add(loadedRecord);
+                        List<TES4LoadedRecord> scriReferences = this.scriIndex.GetOrAdd(scri.Value, () => new List<TES4LoadedRecord>(), out _);
+                        scriReferences.Add(loadedRecord);
                     }
                 }
             }
@@ -91,8 +89,8 @@ namespace Skyblivion.ESReader.TES4
 
         public TES4LoadedRecord[] GetRecordsBySCRI(int formID)
         {
-            List<TES4LoadedRecord>? list = scriIndex.Search(formID.ToString());
-            return list != null ? list.ToArray() : new TES4LoadedRecord[] { };
+            List<TES4LoadedRecord>? list;
+            return scriIndex.TryGetValue(formID, out list) ? list.ToArray() : new TES4LoadedRecord[] { };
         }
 
         private TES4LoadedRecord? GetRecordByEDID(string edid, bool throwNotFoundException)

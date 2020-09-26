@@ -1,6 +1,4 @@
 using Skyblivion.ESReader.PHP;
-using Skyblivion.ESReader.TES4;
-using System;
 using System.Collections.Generic;
 
 namespace Skyblivion.ESReader.Struct
