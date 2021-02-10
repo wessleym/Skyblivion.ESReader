@@ -65,7 +65,7 @@ namespace Skyblivion.ESReader.TES4
 
         public TES4LoadedRecord GetRecordByFormID(int formID)
         {
-            TES4LoadedRecord record;
+            TES4LoadedRecord? record;
             if (this.records.TryGetValue(formID, out record))
             {
                 return record;
@@ -132,7 +132,7 @@ namespace Skyblivion.ESReader.TES4
 
         public int Expand(int formid, string file)
         {
-            Dictionary<int, int> expandTable;
+            Dictionary<int, int>? expandTable;
             if (!this.expandTables.TryGetValue(file, out expandTable))
             {
                 throw new InconsistentESFilesException("Cannot find file "+file+" in expand table.");

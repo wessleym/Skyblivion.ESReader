@@ -8,8 +8,12 @@ namespace Skyblivion.ESReader.Extensions
         public static TValue GetOrAdd<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key, Func<TValue> addValueFactory, out bool containedKey)
         {
             TValue value;
-            containedKey = dictionary.TryGetValue(key, out value);
-            if (containedKey) { return value; }
+            if (dictionary.TryGetValue(key, out value))
+            {
+                containedKey = true;
+                return value;
+            }
+            containedKey = false;
             value = addValueFactory();
             dictionary.Add(key, value);
             return value;
@@ -22,7 +26,7 @@ namespace Skyblivion.ESReader.Extensions
 
         public static TValue? GetWithFallbackNullable<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key, Func<TValue?> fallbackValue) where TValue : class
         {
-            TValue value;
+            TValue? value;
             return dictionary.TryGetValue(key, out value) ? value : fallbackValue();
         }
     }

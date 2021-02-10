@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Skyblivion.ESReader.Extensions;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
@@ -39,7 +40,9 @@ namespace Skyblivion.ESReader.PHP
             using (MemoryStream stream = new MemoryStream(Encoding.UTF8.GetBytes(str)))
             {
                 DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(T));
-                return (T)serializer.ReadObject(stream);
+                object? obj = serializer.ReadObject(stream);
+                if (obj == null) { throw new NullableException(nameof(obj)); }
+                return (T)obj;
             }
         }
 
