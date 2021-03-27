@@ -14,7 +14,7 @@ namespace Skyblivion.ESReader.TES4
         private readonly int formIDPrivate;
         private readonly int flags;
         private int size;
-        public TES4RecordType RecordType { get; private set; }
+        public TES4RecordType RecordType { get; }
         private readonly Lazy<int> formIDLazy;
         public int FormID => formIDLazy.Value;
         private readonly List<KeyValuePair<string, byte[]>> data = new List<KeyValuePair<string, byte[]>>();

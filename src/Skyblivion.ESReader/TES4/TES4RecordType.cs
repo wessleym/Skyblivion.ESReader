@@ -71,7 +71,7 @@ namespace Skyblivion.ESReader.TES4
      */
     public class TES4RecordType
     {
-        public string Name { get; private set; }
+        public string Name { get; }
         private TES4RecordType(string name)
         {
             Name = name;

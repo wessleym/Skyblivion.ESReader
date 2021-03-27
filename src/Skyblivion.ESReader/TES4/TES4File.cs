@@ -14,7 +14,7 @@ namespace Skyblivion.ESReader.TES4
     {
         const int TES4_HEADER_SIZE = 0x18;
         private readonly string path;
-        public string Name { get; private set; }
+        public string Name { get; }
         private readonly Lazy<string[]> masters;
         private readonly Dictionary<TES4RecordType, TES4Grup> grups = new Dictionary<TES4RecordType, TES4Grup>();
         private readonly TES4Collection collection;
