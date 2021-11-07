@@ -4,15 +4,16 @@ using Skyblivion.ESReader.Struct;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Skyblivion.ESReader.TES4
 {
-    public class TES4Collection : IEnumerable<TES4LoadedRecord>
+    public class TES4Collection : IEnumerable<TES4Record>
     {
         private readonly string path;
-        private readonly Dictionary<int, TES4LoadedRecord> records;
-        private readonly Trie<TES4LoadedRecord> edidIndex;
-        private readonly Dictionary<int, List<TES4LoadedRecord>> scriIndex;
+        private readonly Dictionary<int, TES4Record> records;
+        private readonly Trie<TES4Record> edidIndex;
+        private readonly Dictionary<int, List<TES4Record>> scriIndex;
         private readonly List<TES4File> files;
         private readonly Dictionary<string, TES4File> indexedFiles;
         private readonly Dictionary<string, Dictionary<int, int>> expandTables;
@@ -22,9 +23,9 @@ namespace Skyblivion.ESReader.TES4
         public TES4Collection(string path)
         {
             this.path = path;
-            this.records = new Dictionary<int, TES4LoadedRecord>();
-            this.edidIndex = new Trie<TES4LoadedRecord>();
-            this.scriIndex = new Dictionary<int, List<TES4LoadedRecord>>();
+            this.records = new Dictionary<int, TES4Record>();
+            this.edidIndex = new Trie<TES4Record>();
+            this.scriIndex = new Dictionary<int, List<TES4Record>>();
             this.files = new List<TES4File>();
             this.indexedFiles = new Dictionary<string, TES4File>();
             this.expandTables = new Dictionary<string, Dictionary<int, int>>();
@@ -42,30 +43,30 @@ namespace Skyblivion.ESReader.TES4
             this.BuildExpandTables();
             foreach (var file in this.files)
             {
-                foreach (TES4LoadedRecord loadedRecord in file.Load(scheme))
+                foreach (TES4Record loadedRecord in file.Load(scheme))
                 {
                     //no FORMID class encapsulation due to memory budgeting ;)
                     int formid = loadedRecord.FormID;
                     //TODO resolve conflicts
                     this.records.Add(formid, loadedRecord);
-                    string? edid = loadedRecord.GetSubrecordTrimLowerNullable("EDID");
+                    TES4SubrecordData? edid = loadedRecord.TryGetSubrecord("EDID");
                     if (edid != null)
                     {
-                        this.edidIndex.Add(edid, loadedRecord);
+                        this.edidIndex.Add(edid.ToStringTrimLower(), loadedRecord);
                     }
-                    Nullable<int> scri = loadedRecord.GetSubrecordAsFormidNullable("SCRI");
+                    Nullable<int> scri = loadedRecord.TryGetSubrecordAsFormID("SCRI");
                     if (scri != null)
                     {
-                        List<TES4LoadedRecord> scriReferences = this.scriIndex.GetOrAdd(scri.Value, () => new List<TES4LoadedRecord>(), out _);
+                        List<TES4Record> scriReferences = this.scriIndex.GetOrAdd(scri.Value, () => new List<TES4Record>(), out _);
                         scriReferences.Add(loadedRecord);
                     }
                 }
             }
         }
 
-        public TES4LoadedRecord GetRecordByFormID(int formID)
+        public TES4Record GetRecordByFormID(int formID)
         {
-            TES4LoadedRecord? record;
+            TES4Record? record;
             if (this.records.TryGetValue(formID, out record))
             {
                 return record;
@@ -75,7 +76,7 @@ namespace Skyblivion.ESReader.TES4
 
         public string? GetEDIDByFormIDNullable(int formID)
         {
-            TES4LoadedRecord record = GetRecordByFormID(formID);
+            TES4Record record = GetRecordByFormID(formID);
             string? edid = record.TryGetEditorID();
             return edid;
         }
@@ -87,47 +88,50 @@ namespace Skyblivion.ESReader.TES4
             throw new InvalidOperationException(nameof(edid) + " was invalid:  " + edid);
         }
 
-        public TES4LoadedRecord[] GetRecordsBySCRI(int formID)
+        public TES4Record[] GetRecordsBySCRI(int formID)
         {
-            List<TES4LoadedRecord>? list;
-            return scriIndex.TryGetValue(formID, out list) ? list.ToArray() : new TES4LoadedRecord[] { };
+            List<TES4Record>? list;
+            return scriIndex.TryGetValue(formID, out list) ? list.ToArray() : new TES4Record[] { };
         }
 
-        private TES4LoadedRecord? GetRecordByEDID(string edid, bool throwNotFoundException)
+        private TES4Record? GetRecordByEDID(string edid, bool throwNotFoundException)
         {
             string lowerEdid = edid.ToLower();
-            TES4LoadedRecord? record = this.edidIndex.Search(lowerEdid);
+            TES4Record? record = this.edidIndex.Search(lowerEdid);
             if (record != null) { return record; }
             if (throwNotFoundException) { throw new RecordNotFoundException("EDID " + edid + " not found."); }
             return null;
         }
-        public TES4LoadedRecord? TryGetRecordByEDID(string edid)
+        public TES4Record? TryGetRecordByEDID(string edid)
         {
             return GetRecordByEDID(edid, false);
         }
-        public TES4LoadedRecord GetRecordByEDID(string edid)
+        public TES4Record GetRecordByEDID(string edid)
         {
             return GetRecordByEDID(edid, true)!;
         }
 
-        public TrieIterator<TES4LoadedRecord> FindByEDIDPrefix(string edid)
+        public TrieIterator<TES4Record> FindByEDIDPrefix(string edid)
         {
             string lowerEdid = edid.ToLower();
             return this.edidIndex.SearchPrefix(lowerEdid);
         }
 
-        public List<TES4Grup> GetGrup(TES4RecordType type)
+        private IEnumerable<TES4Grup> GetGrup(TES4RecordType type)
         {
-            List<TES4Grup> grups = new List<TES4Grup>();
             foreach (var file in this.files)
             {
-                TES4Grup? grup = file.GetGrup(type);
+                TES4Grup? grup = file.TryGetGrup(type);
                 if (grup != null)
                 {
-                    grups.Add(grup);
+                    yield return grup;
                 }
             }
-            return grups;
+        }
+
+        public IEnumerable<TES4Record> GetGrupRecords(TES4RecordType type)
+        {
+            return GetGrup(type).SelectMany(g => g);
         }
 
         public int Expand(int formid, string file)
@@ -196,7 +200,7 @@ namespace Skyblivion.ESReader.TES4
             }
         }
 
-        public IEnumerator<TES4LoadedRecord> GetEnumerator()
+        public IEnumerator<TES4Record> GetEnumerator()
         {
             return records.Values.GetEnumerator();
         }

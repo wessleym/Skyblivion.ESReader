@@ -13,14 +13,14 @@ namespace Skyblivion.ESReader.TES4
      * Class TES4Grup
      * @package Skyblivion\ESReader\TES4
      */
-    public class TES4Grup : IEnumerable<ITES4Record>
+    public class TES4Grup : IEnumerable<TES4Record>
     {
         public const int GRUP_HEADER_SIZE = 20;
         public int Size { get; private set; }
         public TES4RecordType? Type { get; private set; }
-        private readonly List<ITES4Record> records = new List<ITES4Record>();
+        private readonly List<TES4Record> records = new List<TES4Record>();
 
-        public IEnumerator<ITES4Record> GetEnumerator()
+        public IEnumerator<TES4Record> GetEnumerator()
         {
             return records.GetEnumerator();
         }
@@ -32,7 +32,7 @@ namespace Skyblivion.ESReader.TES4
         /*
              * @throws InvalidESFileException
         */
-        public IEnumerable<ITES4Record> Load(FileStream fileContents, TES4File file, TES4GrupLoadScheme scheme, bool isTopLevelGrup)
+        public IEnumerable<TES4Record> Load(FileStream fileContents, TES4File file, TES4GrupLoadScheme scheme, bool isTopLevelGrup)
         {
             long startPosition = fileContents.Position;
             byte[] headerBytes = fileContents.Read(GRUP_HEADER_SIZE);
@@ -71,7 +71,7 @@ namespace Skyblivion.ESReader.TES4
 
                     default:
                         {
-                            byte[] recordHeaderBytes = fileContents.Read(TES4LoadedRecord.RECORD_HEADER_SIZE);
+                            byte[] recordHeaderBytes = fileContents.Read(TES4Record.RECORD_HEADER_SIZE);
                             string recordTypeString = TES4File.ISO_8859_1.Value.GetString(recordHeaderBytes.Take(4).ToArray());
                             TES4RecordType recordType = TES4RecordType.First(recordTypeString);
                             int recordSize = PHPFunction.UnpackV(recordHeaderBytes.Skip(4).Take(4).ToArray());
@@ -79,7 +79,7 @@ namespace Skyblivion.ESReader.TES4
                             int recordFormid = PHPFunction.UnpackV(recordHeaderBytes.Skip(12).Take(4).ToArray());
                             if (scheme.ShouldLoad(recordType))
                             {
-                                TES4LoadedRecord record = new TES4LoadedRecord(file, recordType, recordFormid, recordSize, recordFlags);
+                                TES4Record record = new TES4Record(file, recordType, recordFormid, recordSize, recordFlags);
                                 record.Load(fileContents, scheme.GetRulesFor(recordType));
                                 this.records.Add(record);
                                 yield return record;

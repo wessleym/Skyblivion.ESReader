@@ -74,7 +74,7 @@ namespace Skyblivion.ESReader.PHP
             }
         }
 
-        public static int UnpackV(IList<byte> bytes)
+        public static int UnpackV(IReadOnlyList<byte> bytes)
         {
             if (bytes.Count != 2 && bytes.Count != 4) { throw new ArgumentException("Length did not equal 2 or 4.", nameof(bytes)); }
             const int baseNum = 256;
