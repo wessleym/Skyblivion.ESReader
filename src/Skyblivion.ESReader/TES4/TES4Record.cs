@@ -78,7 +78,7 @@ namespace Skyblivion.ESReader.TES4
             int value;
             if (this.dataAsFormidCache.TryGetValue(type, out value)) { return value; }
             TES4SubrecordData? subrecord = this.TryGetSubrecord(type);
-            if (subrecord == null || subrecord.Length < 4) { return null; }
+            if (subrecord == null || subrecord.BytesCount < 4) { return null; }
             value = ExpandBytesIntoFormID(subrecord);
             this.dataAsFormidCache.Add(type, value);
             return value;

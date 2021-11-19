@@ -466,7 +466,7 @@
             return collection;
         }
 
-        public static TES4Collection CreateForQUSTStageMapExporting(string dataFileDirectory, string dataFile)
+        public static TES4Collection CreateForQUSTStageMapExportingFromPSCFiles(string dataFileDirectory, string dataFile)
         {
             TES4FileLoadScheme fileScheme = new TES4FileLoadScheme
             {
@@ -475,6 +475,24 @@
                     new TES4GrupLoadScheme()
                     {
                         { TES4RecordType.QUST, new TES4RecordLoadScheme(new string[] { "EDID" }) }
+                    }
+                }
+            };
+            TES4Collection collection = new TES4Collection(dataFileDirectory);
+            collection.Add(dataFile);
+            collection.Load(fileScheme);
+            return collection;
+        }
+
+        public static TES4Collection CreateForQUSTStageMapExportingFromESM(string dataFileDirectory, string dataFile)
+        {
+            TES4FileLoadScheme fileScheme = new TES4FileLoadScheme
+            {
+                {
+                    TES4RecordType.QUST,
+                    new TES4GrupLoadScheme()
+                    {
+                        { TES4RecordType.QUST, new TES4RecordLoadScheme(new string[] { "EDID", "INDX", "QSTA", "CTDA" }) }
                     }
                 }
             };

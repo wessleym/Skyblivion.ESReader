@@ -29,5 +29,30 @@ namespace Skyblivion.ESReader.Extensions
             TValue? value;
             return dictionary.TryGetValue(key, out value) ? value : fallbackValue();
         }
+
+        public static void AddIfNotContainsKey<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key, Func<TValue> addValueFactory)
+        {
+            if (!dictionary.ContainsKey(key))
+            {
+                dictionary.Add(key, addValueFactory());
+            }
+        }
+        public static void AddIfNotContainsKey<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key, TValue addValue)
+        {
+            dictionary.AddIfNotContainsKey(key, () => addValue);
+        }
+
+        public static TValue GetOrAddNewIfNotContainsKey<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key) where TValue : new()
+        {
+            return dictionary.GetOrAdd(key, () => new TValue());
+        }
+
+        public static void SetIfContainsKey<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key, TValue value)
+        {
+            if (dictionary.ContainsKey(key))
+            {
+                dictionary[key] = value;
+            }
+        }
     }
 }
