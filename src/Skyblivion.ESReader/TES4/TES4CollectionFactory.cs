@@ -349,7 +349,7 @@
                     TES4RecordType.QUST,
                     new TES4GrupLoadScheme()
                     {
-                        { TES4RecordType.QUST, new TES4RecordLoadScheme(new string[] { "EDID", "SCRI", "INDX", "SCRO", "QSTA", "QSDT" }) }//WTM:  Change:  Added INDX and SCRO for use by ESMAnalyzer.GetTypesFromSCRO.  Added QSTA and QSDT for QFReferenceAliasFinder and ReferencesFinder.
+                        { TES4RecordType.QUST, new TES4RecordLoadScheme(new string[] { "EDID", "SCRI", "INDX", "SCRO", "QSTA", "QSDT", "CTDA" }) }//WTM:  Change:  Added INDX and SCRO for use by ESMAnalyzer.GetTypesFromSCRO.  Added QSTA, QSDT, and CTDA to retrieve information previously retrieved from BuildTarget files.
                     }
                 },
                 {

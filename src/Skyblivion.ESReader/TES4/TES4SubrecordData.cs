@@ -6,13 +6,13 @@ namespace Skyblivion.ESReader.TES4
 {
     public class TES4SubrecordData
     {
-        public IReadOnlyList<byte> Bytes { get; }
+        public byte[] Bytes { get; }
         public TES4SubrecordData(byte[] bytes)
         {
             Bytes = bytes;
         }
 
-        public int BytesCount => Bytes.Count;
+        public int BytesLength => Bytes.Length;
 
         public byte FirstByte()
         {
