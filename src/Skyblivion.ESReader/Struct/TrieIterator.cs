@@ -71,8 +71,8 @@ namespace Skyblivion.ESReader.Struct
         {
             if (this.stack == null) { throw new NullableException(nameof(this.stack)); }
             /*
-             * There can be intermediary nodes that weren"t directly inserted
-             * They won"t have a value, so let"s skip them
+             * There can be intermediary nodes that weren't directly inserted
+             * They won't have a value, so let's skip them
              */
             Stack<Trie<T>[]> nodesToTravel = new Stack<Trie<T>[]>();
             nodesToTravel.Push(new Trie<T>[] { trie });
