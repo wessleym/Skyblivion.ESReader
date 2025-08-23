@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Skyblivion.ESReader.TES4
+namespace Skyblivion.ESReader
 {
 	public class StageIndexAndLogIndex : IEquatable<StageIndexAndLogIndex>
 	{

@@ -8,54 +8,54 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace Skyblivion.ESReader.TES4
+namespace Skyblivion.ESReader
 {
-    public class TES4File
+    public class ESFile
     {
-        const int TES4_HEADER_SIZE = 0x18;
         private readonly string path;
         public string Name { get; }
         private readonly Lazy<string[]> masters;
-        private readonly Dictionary<TES4RecordType, TES4Grup> grups = new Dictionary<TES4RecordType, TES4Grup>();
-        private readonly TES4Collection collection;
+        private readonly Dictionary<ESRecordType, Grup> grups = new Dictionary<ESRecordType, Grup>();
+        private readonly ESCollection collection;
         /*
         * File constructor.
         */
-        public TES4File(TES4Collection collection, string path, string name)
+        public ESFile(ESCollection collection, string path, string name)
         {
             this.collection = collection;
             this.path = path;
             this.Name = name;
             masters = new Lazy<string[]>(() =>
               {
-                  TES4Record tes4record;
+                  ESRecord tes4record;
                   using (FileStream file = GetFile())
                   {
                       tes4record = this.FetchTES4(file);
                   }
-                  return tes4record.GetSubrecordsStrings("MAST").ToArray();
+                  return tes4record.GetSubrecordsStringsTrim("MAST").ToArray();
               });
         }
 
         public string[] Masters => this.masters.Value;
 
         public static readonly Lazy<Encoding> ISO_8859_1 = new Lazy<Encoding>(() => Encoding.GetEncoding("iso-8859-1"));
+
         private FileStream GetFile()
         {
             string filePath = Path.Combine(this.path, this.Name);
             return new FileStream(filePath, FileMode.Open);
         }
 
-        public IEnumerable<TES4Record> Load(TES4FileLoadScheme scheme)
+        public IEnumerable<ESRecord> Load(FileLoadScheme scheme)
         {
-            Console.Write("Processing " + nameof(TES4File) + " Data...");
+            Console.Write("Processing " + nameof(ESFile) + " Data...");
             Stopwatch stopwatch = Stopwatch.StartNew();
             using (FileStream contents = GetFile())
             {
                 this.FetchTES4(contents);
                 while (true)
                 {
-                    byte[] headerBytes = new byte[TES4Grup.GRUP_HEADER_SIZE];
+                    byte[] headerBytes = new byte[ESRecord.RECORD_HEADER_SIZE];
                     int read = contents.Read(headerBytes);
                     if (read == 0) { break; }
                     string headerString = ISO_8859_1.Value.GetString(headerBytes);
@@ -63,16 +63,16 @@ namespace Skyblivion.ESReader.TES4
                     {
                         throw new InvalidESFileException("Invalid GRUP magic, found " + headerString.Substring(0, 4));
                     }
-                    contents.Seek(-TES4Grup.GRUP_HEADER_SIZE, SeekOrigin.Current);
+                    contents.Seek(-ESRecord.RECORD_HEADER_SIZE, SeekOrigin.Current);
 
                     int grupSize = PHPFunction.UnpackV(headerBytes.Skip(4).Take(4).ToArray());
-                    TES4RecordType grupType = TES4RecordType.First(headerString.Substring(8, 4));
+                    ESRecordType grupType = RecordTypeParser.Parse(headerString.Substring(8, 4));
                     if (scheme.ShouldLoad(grupType))
                     {
-                        TES4GrupLoadScheme? rules = scheme.GetRulesFor(grupType);
+                        GrupLoadScheme? rules = scheme.GetRulesFor(grupType);
                         if (rules == null) { throw new InvalidOperationException(nameof(rules) + " was null for " + nameof(grupType) + " " + grupType.Name + "."); }
-                        TES4Grup grup = new TES4Grup();
-                        foreach (var loadedRecord in grup.Load(contents, this, rules, true))
+                        Grup grup = Grup.Load(contents, true);
+                        foreach (var loadedRecord in grup.LoadSubRecords(contents, this, rules))
                         {
                             yield return loadedRecord;
                         }
@@ -86,10 +86,10 @@ namespace Skyblivion.ESReader.TES4
                 }
             }
             stopwatch.Stop();
-            Console.WriteLine("\rProcessing " + nameof(TES4File) + " Complete (" + stopwatch.ElapsedMilliseconds + " ms)");
+            Console.WriteLine("\rProcessing " + nameof(ESFile) + " Complete (" + stopwatch.ElapsedMilliseconds + " ms)");
         }
 
-        public TES4Grup? TryGetGrup(TES4RecordType type)
+        public Grup? TryGetGrup(ESRecordType type)
         {
             return this.grups.GetWithFallbackNullable(type, () => null);
         }
@@ -99,15 +99,9 @@ namespace Skyblivion.ESReader.TES4
             return this.collection.Expand(formid, this.Name);
         }
 
-        private TES4Record FetchTES4(FileStream stream)
+        private ESRecord FetchTES4(FileStream stream)
         {
-            byte[] recordHeader = stream.Read(TES4Record.RECORD_HEADER_SIZE);
-            int recordSize = PHPFunction.UnpackV(recordHeader.Skip(4).Take(4).ToArray());//Throw away the first four bytes.
-            int recordFlags = PHPFunction.UnpackV(recordHeader.Skip(8).Take(4).ToArray());
-            int recordFormid = PHPFunction.UnpackV(recordHeader.Skip(12).Take(4).ToArray());
-            TES4Record tes4record = new TES4Record(this, TES4RecordType.TES4, recordFormid, recordSize, recordFlags);
-            tes4record.Load(stream, new TES4RecordLoadScheme(new string[] { "MAST" }));
-            return tes4record;
+            return RecordReader.ReadTES4Record(this, stream);
         }
     }
 }

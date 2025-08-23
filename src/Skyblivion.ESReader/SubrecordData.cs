@@ -1,13 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 
-namespace Skyblivion.ESReader.TES4
+namespace Skyblivion.ESReader
 {
-    public class TES4SubrecordData
+    public class SubrecordData
     {
         public byte[] Bytes { get; }
-        public TES4SubrecordData(byte[] bytes)
+        public SubrecordData(byte[] bytes)
         {
             Bytes = bytes;
         }
@@ -31,7 +30,7 @@ namespace Skyblivion.ESReader.TES4
 
         public override string ToString()
         {
-            return TES4File.ISO_8859_1.Value.GetString(Bytes);
+            return ESFile.ISO_8859_1.Value.GetString(Bytes);
         }
 
         public string ToStringTrim()

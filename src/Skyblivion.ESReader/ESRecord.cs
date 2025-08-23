@@ -5,24 +5,21 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace Skyblivion.ESReader.TES4
+namespace Skyblivion.ESReader
 {
-    public class TES4Record
+    public class ESRecord
     {
-        public const int RECORD_HEADER_SIZE = 20;
-        private readonly TES4File placedFile;
+        public const int RECORD_HEADER_SIZE = 20;//20 for TES4, 24 for TES5
+        private readonly ESFile placedFile;
         private readonly int formIDPrivate;
         private readonly int flags;
         private int size;
-        public TES4RecordType RecordType { get; }
+        public ESRecordType RecordType { get; }
         private readonly Lazy<int> formIDLazy;
         public int FormID => formIDLazy.Value;
-        private readonly List<KeyValuePair<string, TES4SubrecordData>> subrecords = new List<KeyValuePair<string, TES4SubrecordData>>();
+        private readonly List<KeyValuePair<string, SubrecordData>> subrecords = new List<KeyValuePair<string, SubrecordData>>();
         private readonly Dictionary<string, int> dataAsFormidCache = new Dictionary<string, int>();
-        /*
-        * TES4Record constructor.
-        */
-        public TES4Record(TES4File placedFile, TES4RecordType type, int formid, int size, int flags)
+        public ESRecord(ESFile placedFile, ESRecordType type, int formid, int size, int flags)
         {
             this.placedFile = placedFile;
             this.RecordType = type;
@@ -32,17 +29,17 @@ namespace Skyblivion.ESReader.TES4
             formIDLazy = new Lazy<int>(() => this.placedFile.Expand(this.formIDPrivate));
         }
 
-        public int ExpandBytesIntoFormID(TES4SubrecordData subrecord)
+        public int ExpandBytesIntoFormID(SubrecordData subrecord)
         {
             return this.placedFile.Expand(PHPFunction.UnpackV(subrecord.FirstFourBytes()));
         }
 
-        public IEnumerable<TES4SubrecordData> GetSubrecords(string type)
+        public IEnumerable<SubrecordData> GetSubrecords(string type)
         {
             return this.subrecords.Where(d => d.Key == type).Select(d => d.Value);
         }
 
-        public IEnumerable<KeyValuePair<string, TES4SubrecordData>> GetSubrecords(IReadOnlyList<string> types)
+        public IEnumerable<KeyValuePair<string, SubrecordData>> GetSubrecords(IReadOnlyList<string> types)
         {
             return this.subrecords.Where(d => types.Contains(d.Key));
         }
@@ -52,23 +49,28 @@ namespace Skyblivion.ESReader.TES4
             return GetSubrecords(type).Select(r => r.ToString());
         }
 
-        public TES4SubrecordData? TryGetSubrecord(string type)
+        public IEnumerable<string> GetSubrecordsStringsTrim(string type)
         {
-            TES4SubrecordData? subrecord = this.subrecords.Where(d => d.Key == type).Select(d => d.Value).FirstOrDefault();
+            return GetSubrecords(type).Select(r => r.ToStringTrim());
+        }
+
+        public SubrecordData? TryGetSubrecord(string type)
+        {
+            SubrecordData? subrecord = this.subrecords.Where(d => d.Key == type).Select(d => d.Value).FirstOrDefault();
             if (subrecord != null) { return subrecord; }
             return null;
         }
 
-        public TES4SubrecordData GetSubrecord(string type)
+        public SubrecordData GetSubrecord(string type)
         {
-            TES4SubrecordData? subrecord = TryGetSubrecord(type);
+            SubrecordData? subrecord = TryGetSubrecord(type);
             if (subrecord == null) { throw new InvalidOperationException(nameof(type) + " " + type + " resulted in a null " + nameof(subrecord) + "."); }
             return subrecord;
         }
 
         public string? TryGetSubrecordTrim(string type)
         {
-            TES4SubrecordData? subrecord = TryGetSubrecord(type);
+            SubrecordData? subrecord = TryGetSubrecord(type);
             if (subrecord == null) { return null; }
             return subrecord.ToStringTrim();
         }
@@ -77,7 +79,7 @@ namespace Skyblivion.ESReader.TES4
         {
             int value;
             if (this.dataAsFormidCache.TryGetValue(type, out value)) { return value; }
-            TES4SubrecordData? subrecord = this.TryGetSubrecord(type);
+            SubrecordData? subrecord = this.TryGetSubrecord(type);
             if (subrecord == null || subrecord.BytesLength < 4) { return null; }
             value = ExpandBytesIntoFormID(subrecord);
             this.dataAsFormidCache.Add(type, value);
@@ -102,7 +104,7 @@ namespace Skyblivion.ESReader.TES4
             throw new InvalidOperationException(nameof(editorID) + " was null.");
         }
 
-        public IEnumerable<Tuple<KeyValuePair<string, TES4SubrecordData>, StageIndexAndLogIndex?>> GetSubrecordsWithNullableStageIndexAndLogIndex(string returnRecordType)
+        public IEnumerable<Tuple<KeyValuePair<string, SubrecordData>, StageIndexAndLogIndex?>> GetSubrecordsWithNullableStageIndexAndLogIndex(string returnRecordType)
         {
             const string indx = "INDX", qsdt = "QSDT";
             Nullable<int> stageIndex = null, logIndex = null;
@@ -125,13 +127,13 @@ namespace Skyblivion.ESReader.TES4
                 {
                     if ((stageIndex != null) != (logIndex != null)) { throw new InvalidDataException("(stageIndex != null) != (logIndex != null)"); }
                     StageIndexAndLogIndex? stageIndexAndLogIndex = stageIndex != null && logIndex != null ? new StageIndexAndLogIndex(stageIndex.Value, logIndex.Value) : null;
-                    yield return new Tuple<KeyValuePair<string, TES4SubrecordData>, StageIndexAndLogIndex?>(subrecord, stageIndexAndLogIndex);
+                    yield return new Tuple<KeyValuePair<string, SubrecordData>, StageIndexAndLogIndex?>(subrecord, stageIndexAndLogIndex);
                 }
                 else { throw new InvalidOperationException(nameof(subrecord) + "." + nameof(subrecord.Key) + " was " + subrecord.Key + "."); }
             }
         }
 
-        public IEnumerable<Tuple<KeyValuePair<string, TES4SubrecordData>, StageIndexAndLogIndex>> GetSubrecordsWithStageIndexAndLogIndex(string returnRecordType)
+        public IEnumerable<Tuple<KeyValuePair<string, SubrecordData>, StageIndexAndLogIndex>> GetSubrecordsWithStageIndexAndLogIndex(string returnRecordType)
         {
             return GetSubrecordsWithNullableStageIndexAndLogIndex(returnRecordType).Select(x =>
             {
@@ -140,7 +142,7 @@ namespace Skyblivion.ESReader.TES4
             })!;
         }
 
-        public IEnumerable<TES4SubrecordData> GetSCRORecords(StageIndexAndLogIndex? stageIndexAndLogIndex)
+        public IEnumerable<SubrecordData> GetSCRORecords(StageIndexAndLogIndex? stageIndexAndLogIndex)
         {
             var scroRecords = GetSubrecordsWithNullableStageIndexAndLogIndex("SCRO");
             if (stageIndexAndLogIndex != null)
@@ -160,7 +162,7 @@ namespace Skyblivion.ESReader.TES4
             return sctx.Replace('\u0092', '’');
         }
 
-        public void Load(Stream file, TES4RecordLoadScheme scheme)
+        public void Load(Stream file, RecordLoadScheme scheme)
         {
             if (this.size == 0)
             {
@@ -179,12 +181,12 @@ namespace Skyblivion.ESReader.TES4
             int i = 0;
             while (i < this.size)
             {
-                string subrecordType = TES4File.ISO_8859_1.Value.GetString(fileData, i, 4);
+                string subrecordType = ESFile.ISO_8859_1.Value.GetString(fileData, i, 4);
                 int subrecordSize = PHPFunction.UnpackV(fileData.Skip(i + 4).Take(2).ToArray());
                 if (scheme.ShouldLoad(subrecordType))
                 {
                     byte[] subrecordData = fileData.Skip(i + 6).Take(subrecordSize).ToArray();
-                    this.subrecords.Add(new KeyValuePair<string, TES4SubrecordData>(subrecordType, new TES4SubrecordData(subrecordData)));
+                    this.subrecords.Add(new KeyValuePair<string, SubrecordData>(subrecordType, new SubrecordData(subrecordData)));
                 }
 
                 i += (subrecordSize + 6);

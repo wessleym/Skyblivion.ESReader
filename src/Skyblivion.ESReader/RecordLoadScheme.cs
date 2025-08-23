@@ -1,11 +1,11 @@
 using System.Linq;
 
-namespace Skyblivion.ESReader.TES4
+namespace Skyblivion.ESReader
 {
-    public class TES4RecordLoadScheme
+    public class RecordLoadScheme
     {
         private readonly string[] subrecords;
-        public TES4RecordLoadScheme(string[] subrecords)
+        public RecordLoadScheme(string[] subrecords)
         {
             this.subrecords = subrecords;
         }
