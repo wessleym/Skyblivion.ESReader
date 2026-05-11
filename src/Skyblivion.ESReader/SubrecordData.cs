@@ -38,11 +38,6 @@ namespace Skyblivion.ESReader
             return ToString().Trim('\0').Trim();
         }
 
-        public string ToStringTrimLower()
-        {
-            return ToStringTrim().ToLower();
-        }
-
         public int FirstFourBytesToInt()
         {
             return BitConverter.ToInt32(Bytes, 0);//This method only uses the first four bytes.

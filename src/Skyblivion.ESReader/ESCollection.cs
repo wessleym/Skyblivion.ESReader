@@ -21,7 +21,7 @@ namespace Skyblivion.ESReader
         {
             this.directoryPath = directoryPath;
             this.records = new Dictionary<int, ESRecord>();
-            this.edidIndex = new Trie<ESRecord>();
+            this.edidIndex = new Trie<ESRecord>(StringComparer.OrdinalIgnoreCase, StringComparison.OrdinalIgnoreCase);
             this.scriIndex = new Dictionary<int, List<ESRecord>>();
             this.files = new List<ESFile>();
             this.indexedFiles = new Dictionary<string, ESFile>();
@@ -49,7 +49,7 @@ namespace Skyblivion.ESReader
                     SubrecordData? edid = loadedRecord.TryGetSubrecord("EDID");
                     if (edid != null)
                     {
-                        this.edidIndex.Add(edid.ToStringTrimLower(), loadedRecord);
+                        this.edidIndex.Add(edid.ToStringTrim(), loadedRecord);
                     }
                     Nullable<int> scri = loadedRecord.TryGetSubrecordAsFormID("SCRI");
                     if (scri != null)
@@ -93,8 +93,7 @@ namespace Skyblivion.ESReader
 
         private ESRecord? GetRecordByEDID(string edid, bool throwNotFoundException)
         {
-            string lowerEdid = edid.ToLower();
-            ESRecord? record = this.edidIndex.Search(lowerEdid);
+            ESRecord? record = this.edidIndex.Search(edid);
             if (record != null) { return record; }
             if (throwNotFoundException) { throw new RecordNotFoundException("EDID " + edid + " not found."); }
             return null;
@@ -110,8 +109,7 @@ namespace Skyblivion.ESReader
 
         public TrieIterator<ESRecord> FindByEDIDPrefix(string edid)
         {
-            string lowerEdid = edid.ToLower();
-            return this.edidIndex.SearchPrefix(lowerEdid);
+            return this.edidIndex.SearchPrefix(edid);
         }
 
         private IEnumerable<Grup> GetGrup(ESRecordType type)

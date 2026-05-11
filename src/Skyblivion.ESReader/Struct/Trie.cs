@@ -1,4 +1,5 @@
 using Skyblivion.ESReader.PHP;
+using System;
 using System.Collections.Generic;
 
 namespace Skyblivion.ESReader.Struct
@@ -9,17 +10,20 @@ namespace Skyblivion.ESReader.Struct
      */
     public class Trie<T> where T : class
     {
-        private readonly Dictionary<string, Trie<T>> trie = new Dictionary<string, Trie<T>>();
+        private readonly Dictionary<string, Trie<T>> trie;
+        private readonly StringComparer stringComparer;
+        private readonly StringComparison stringComparison;
         private T? value = null;
-        /*
-        * Trie constructor
-         *
-         *  This is for internal use
-        */
-        public Trie(T? value = null)
+        private Trie(StringComparer stringComparer, StringComparison stringComparison, T? value)
         {
+            trie = new Dictionary<string, Trie<T>>(stringComparer);
+            this.stringComparer = stringComparer;
+            this.stringComparison = stringComparison;
             this.value = value;
         }
+        public Trie(StringComparer stringComparer, StringComparison stringComparison)
+            : this(stringComparer, stringComparison, null)
+        { }
 
         /*
         * Add value to the trie
@@ -48,20 +52,20 @@ namespace Skyblivion.ESReader.Struct
                 { //Split
                     if (i >= headLength)
                     {
-                        Trie<T> equalTrie = new Trie<T>(value);
+                        Trie<T> equalTrie = new Trie<T>(stringComparer, stringComparison, value);
                         this.trie.Add(equalPrefix, equalTrie);
                         equalTrie.trie.Add(prefix.Substring(i), trie);
                         this.trie.Remove(prefix);
                         return;
                     }
-                    else if (prefix[i] != head[i])
+                    else if (stringComparer.Compare(prefix[i].ToString(), head[i].ToString()) != 0)
                     {
                         if (i > 0)
                         {
-                            Trie<T> equalTrie = new Trie<T>();
+                            Trie<T> equalTrie = new Trie<T>(stringComparer, stringComparison);
                             this.trie.Add(equalPrefix, equalTrie);
                             equalTrie.trie.Add(prefix.Substring(i), trie);
-                            equalTrie.trie.Add(str.Substring(i), new Trie<T>(value));
+                            equalTrie.trie.Add(str.Substring(i), new Trie<T>(stringComparer, stringComparison, value));
                             this.trie.Remove(prefix);
                             return;
                         }
@@ -79,7 +83,7 @@ namespace Skyblivion.ESReader.Struct
                     return;
                 }
             }
-            this.trie.Add(str, new Trie<T>(value));
+            this.trie.Add(str, new Trie<T>(stringComparer, stringComparison, value));
         }
 
         /*
@@ -94,7 +98,7 @@ namespace Skyblivion.ESReader.Struct
             foreach (var kvp in this.trie)
             {
                 var prefix = kvp.Key;
-                if (str.StartsWith(prefix))
+                if (str.StartsWith(prefix, stringComparison))
                 {
                     var trie = kvp.Value;
                     return trie.Search(str.Substring(prefix.Length));
